@@ -15,6 +15,7 @@ class Character:
         self.encombrement = 0
         self.epuisement = 0
         self.debuff_epuisement = 0
+        self.epuisement_proc = 1
         self.Distance = 10
         self.Player_Action = Action
         self.Player_Action_Bonus = Action_bonus
@@ -228,22 +229,55 @@ class Character:
             self.encombrement -= 1
 
 
+
+    # Check HP
+    def check_hp(self, pourcentage=False, div=0):
+        if pourcentage:
+            self.PV_tot /= div
+        else:
+            if self.PV_tot > self.PV_Max:
+                self.PV_tot = self.PV_Max
+
+
     #epuisement
     def Epuisement(self):
-        match self.epuisement:
-            case 1:
-                self.debuff_epuisement = -1
-            case 2:
-                self.debuff_epuisement = -1
-                self.Speed /= 2
-            case 3:
-                self.debuff_epuisement = -1
-                self.Speed /= 2
-            case 4:
-                self.debuff_epuisement = -1
-                self.Speed /= 2
-                self.PV_Max /= 2
+        # Dictionnaire pour stocker les malus/debuffs en fonction de l'epuisement
+        epuisement_effects = {
+            0: (0, 1),
+            1: (-1, 1),
+            2: (-1, 2),
+            3: (-1, 2),
+            4: (False, None),
+            5: (0, 1),
+            6: (0, None),
+        }
 
+        # Verifier si l'epuisement a change depuis la derniere fois
+        if self.epuisement != self.epuisement_proc:
+            # Recuperer les effets associes a l'epuisement actuel
+            effect = epuisement_effects.get(self.epuisement, None)
+            if effect:
+                debuff, speed_modifier = effect
+                # Annuler les malus/debuffs de l'epuisement precedent
+                if self.epuisement_proc in epuisement_effects:
+                    prev_effect = epuisement_effects[self.epuisement_proc]
+                    prev_debuff, prev_speed_modifier = prev_effect
+                    self.debuff_epuisement -= prev_debuff
+                    if prev_speed_modifier is not None:
+                        self.Speed = prev_speed_modifier
+
+                # Appliquer les malus/debuffs de l'epuisement actuel
+                self.debuff_epuisement += debuff
+                if speed_modifier is not None:
+                    self.Speed = speed_modifier
+
+            # Mettre a jour l'epuisement precedent
+            self.epuisement_proc = self.epuisement
+
+        # Appliquer les malus/debuffs persistants de l'epuisement
+        if self.debuff_epuisement:
+            self.PV_tot += self.debuff_epuisement * self.PV_Max
+            self.check_hp()
 
     # get stats principal
     def get_action(self):
