@@ -13,9 +13,9 @@ class Character:
         self.name = name
         self.lvl = lvl 
         self.encombrement = 0
-        self.epuisement = 0
+        self.epuisement_act = 0
         self.debuff_epuisement = 0
-        self.epuisement_proc = 1
+        self.epuisement_prec = 0
         self.Distance = 10
         self.Player_Action = Action
         self.Player_Action_Bonus = Action_bonus
@@ -93,11 +93,14 @@ class Character:
         self.check_pv_tot = False
         self.PV_Max = self.PV_base + self.PV_lvl
         self.check_pv_max = False
+        self.PV_fixe = self.PV_base + self.PV_lvl
+        self.check_pv_fixe = False
         self.PV_Temp = 0
         self.class_armor = 10 + self.mod_Dex
         self.prof = [2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6]
         self.proficiency = self.prof[self.lvl-1]
         self.Speed = 0
+        self.Speed_base = 0
 
         # proficiencies
         self.prof_weapon = None
@@ -243,41 +246,52 @@ class Character:
     def Epuisement(self):
         # Dictionnaire pour stocker les malus/debuffs en fonction de l'epuisement
         epuisement_effects = {
-            0: (0, 1),
-            1: (-1, 1),
-            2: (-1, 2),
-            3: (-1, 2),
-            4: (False, None),
-            5: (0, 1),
-            6: (0, None),
+            0: (0, -1 , None, False),
+            1: (-1, -1, None, False),
+            2: (-1, 2, None, False),
+            3: (-1, 2, None, False),
+            4: (-1, 2, 2, False),
+            5: (-1, 0, 2, False),
+            6: (-1, 0, 2, True),
         }
 
         # Verifier si l'epuisement a change depuis la derniere fois
-        if self.epuisement != self.epuisement_proc:
+        if self.epuisement_act != self.epuisement_prec:
             # Recuperer les effets associes a l'epuisement actuel
             effect = epuisement_effects.get(self.epuisement, None)
             if effect:
-                debuff, speed_modifier = effect
+                debuff, speed_modifier, malus_hp, death = effect
+
                 # Annuler les malus/debuffs de l'epuisement precedent
-                if self.epuisement_proc in epuisement_effects:
-                    prev_effect = epuisement_effects[self.epuisement_proc]
-                    prev_debuff, prev_speed_modifier = prev_effect
+                if self.epuisement_prec in epuisement_effects:
+                    prev_effect = epuisement_effects[self.epuisement_prec]
+                    prev_debuff, prev_speed_modifier, prev_malus_hp, prev_death = prev_effect
                     self.debuff_epuisement -= prev_debuff
                     if prev_speed_modifier is not None:
                         self.Speed = prev_speed_modifier
 
                 # Appliquer les malus/debuffs de l'epuisement actuel
-                self.debuff_epuisement += debuff
-                if speed_modifier is not None:
-                    self.Speed = speed_modifier
-
+                self.debuff_epuisement = debuff
+                if speed_modifier == 0:
+                    self.Speed = 0
+                elif speed_modifier == -1:
+                    self.Speed = self.Speed_base
+                else:
+                    self.Speed /= speed_modifier
+                if malus_hp == 2:
+                    self.PV_Max /= malus_hp
+                    self.check_hp()
+                else:
+                    self.PV_Max *= malus_hp
+                    self.check_hp()
+                if death:
+                    self.PV_tot -= self.PV_Max *2
+                else:
+                    self.PV_tot += self.PV_Max *2
+                    
             # Mettre a jour l'epuisement precedent
             self.epuisement_proc = self.epuisement
 
-        # Appliquer les malus/debuffs persistants de l'epuisement
-        if self.debuff_epuisement:
-            self.PV_tot += self.debuff_epuisement * self.PV_Max
-            self.check_hp()
 
     # get stats principal
     def get_action(self):
@@ -325,6 +339,12 @@ class Character:
             self.PV_Max = self.PV_base + self.PV_lvl
             self.check_pv_max = True
         return self.PV_Max
+    
+    def get_pv_fixe(self):
+        if self.check_pv_fixe is not True:
+            self.PV_fixe = self.PV_base + self.PV_lvl
+            self.check_pv_fixe = True
+        return self.PV_fixe
 
     def get_help(self):
         return self.Help
