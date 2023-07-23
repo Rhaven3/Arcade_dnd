@@ -13,6 +13,8 @@ class Character:
         self.name = name
         self.lvl = lvl 
         self.encombrement = 0
+        self.epuisement = 0
+        self.debuff_epuisement = 0
         self.Distance = 10
         self.Player_Action = Action
         self.Player_Action_Bonus = Action_bonus
@@ -38,7 +40,7 @@ class Character:
         self.Help = 0
         self.lourd = 0
 
-        # Détails
+        # Details
         self.historique = historique
         self.race = race
         self.age = age
@@ -128,12 +130,12 @@ class Character:
         self.Sag_Intuition_Pass = 10+self.Intuition
 
 
-    # Jet de Caractéristique
+    # Jet de Caracteristique
     def jet_For(self, modifier=0,competence=""):
-        if self.Help is not 0: # Si joueur aidé
-            modifier += self.Help
+        modifier += self.Help
         modifier += self.encombrement
-        jet = d20(modifier)# jet de dé
+        modifier += self.debuff_epuisement
+        jet = d20(modifier)# jet de de
         self.Help = 0  # reset de Help
         if competence != "":# si comp bonus comp
             jet += competence
@@ -146,8 +148,8 @@ class Character:
         if self.Dodge <= 1: # si dodge action
             modifier += self.Dodge
             self.Dodge = 0
-        if self.Help is not 0: # Si joueur aidé
-            modifier += self.Help
+        modifier += self.Help
+        modifier += self.debuff_epuisement
         modifier += self.encombrement
         jet = d20(modifier)
         self.Help = 0  # reset de Help
@@ -159,8 +161,8 @@ class Character:
             return jet
 
     def jet_Con(self, modifier=0,competence=""):
-        if self.Help is not 0: # Si joueur aidé
-            modifier += self.Help
+        modifier += self.Help
+        modifier += self.debuff_epuisement
         modifier += self.encombrement
         jet = d20(modifier)
         self.Help = 0  # reset de Help
@@ -172,8 +174,8 @@ class Character:
             return jet
     
     def jet_Int(self, modifier=0,competence=""):
-        if self.Help is not 0: # Si joueur aidé
-            modifier += self.Help
+        modifier += self.Help
+        modifier += self.debuff_epuisement
         jet = d20(modifier)
         self.Help = 0  # reset de Help
         if competence != "":
@@ -185,6 +187,7 @@ class Character:
 
     def jet_Wis(self, modifier=0,competence=""):
         modifier += self.Help
+        modifier += self.debuff_epuisement
         jet = d20(modifier)
         self.Help = 0  # reset de Help
         if competence != "":
@@ -196,6 +199,7 @@ class Character:
 
     def jet_Cha(self, modifier=0,competence=""):
             modifier += self.Help
+            modifier += self.debuff_epuisement
             jet = d20(modifier)
             self.Help = 0  # reset de Help
             if competence != "":
@@ -206,6 +210,8 @@ class Character:
                 return jet
     
     def jet_initiative(self, modifier=0):
+        modifier += self.Help
+        modifier += self.debuff_epuisement
         jet = d20(modifier) + self.initiative
         return jet
 
@@ -220,6 +226,23 @@ class Character:
         elif self.Charge >= self.CC:
             self.Speed = 0
             self.encombrement -= 1
+
+
+    #epuisement
+    def Epuisement(self):
+        match self.epuisement:
+            case 1:
+                self.debuff_epuisement = -1
+            case 2:
+                self.debuff_epuisement = -1
+                self.Speed /= 2
+            case 3:
+                self.debuff_epuisement = -1
+                self.Speed /= 2
+            case 4:
+                self.debuff_epuisement = -1
+                self.Speed /= 2
+                self.PV_Max /= 2
 
 
     # get stats principal
@@ -286,6 +309,7 @@ class Character:
         # opton mouvement restreint
         etat = target.get_etat()
         etat["prone"] = True
+        print("Vous êtes à terre !")
 
     def Grappled(self, target=None):
         if target is not None and not self.etat["incapacited"]:
@@ -293,6 +317,7 @@ class Character:
                 target = self
             target.Speed = 0
             target_etat = target.get_etat()
+            target_etat
     
         # à terminer
 
@@ -303,6 +328,14 @@ class Character:
         target_etat["deafened"] = True
         print("Vous êtes assourdi !")
 
+    def Blinded(self, target=None):
+        if target == None:
+            target = self
+        target_etat = target.get_etat()
+        target_etat["blinded"] = True
+        print("Vous êtes aveuglé !")
+    
+    
         
 
     # Menu
@@ -395,21 +428,30 @@ class Character:
             dmg = (arme.get_Dgt() + bonus)*crit
             print("Vous avez fait ", dmg, "de dégats")
             self.PV_tot -= dmg
+
     def attack_action(self, target, arme, modifier=0):
         bonus = self.mod_For
         bonus_dgt = self.mod_For
         modifier += self.Help  # aide
         modifier += self.lourd  # arme lourde
-        if self.etat["prone"]: # désavantage à terre
+        if self.etat["prone"]: # desavantage a terre
             modifier -= 1
         target_etat = target.get_etat()
-        if target_etat["prone"]: # si cible à terre
+        if target_etat["prone"]: # si cible a terre
             if isinstance(arme, Weapon):
                 allonge = arme.get_allonge()
                 if allonge <= 1.5:
                     modifier += 1
                 else:
                     modifier -= 1
+
+        if self.etat["blinded"]: # desavantage aveugle
+            modifier -= 1
+        target_etat = target.get_etat()
+        if target_etat["blinded"]: # si cible est aveugle
+            modifier += 1
+        if self.epuisement <= 3: # epuisement
+            modifier += self.debuff_epuisement
         cost = 1
         if self.Player_Action > 0:
             if self.left_arm or self.right_arm != None:  # si il y a une arme en main
@@ -528,28 +570,42 @@ class Character:
                 self.Player_Action_Bonus -= cost
 
     def contre_lutte(self, modifier=0):
-        contre_lutte = input("Voulez vous faire un jet d'Athlétisme ou un jet d'Acrobaties pour résister à la lutte ? \n 1°) jet d'Athlétisme \n 2°) jet d'Acrobaties \n 3°) Ne rien faire")
-        modifier = self.Hkelp
-        match contre_lutte:
-            case "1":
-                contre_lutte = d20(modifier) + self.Athletisme
-                return contre_lutte
-            case "2":
-                contre_lutte = d20(modifier) + self.Acrobaties
-                return contre_lutte
-            case "3":
-                contre_lutte = 0
-                return contre_lutte
+        x=1
+        for i in range(x):
+            contre_lutte = input("Voulez vous faire un jet d'Athlétisme ou un jet d'Acrobaties pour résister à la lutte ? \n 1°) jet d'Athlétisme \n 2°) jet d'Acrobaties \n 3°) Ne rien faire\n")
+            modifier += self.Help # aide
+            match contre_lutte:
+                case "1":
+                    contre_lutte = d20(modifier) + self.Athletisme
+                    return contre_lutte
+                case "2":
+                    contre_lutte = d20(modifier) + self.Acrobaties
+                    return contre_lutte
+                case "3":
+                    contre_lutte = 0
+                    return contre_lutte
+                case other:
+                    x += 1
+                    print("vous avez fait une erreur !")
             
-    def lutte(self, target, modifier=0):
+    def lutte(self, target=None, modifier=0):
+        x=1
+        Player_party = listing().Player_party
+        if target is None:
+            target = self
+        for i in range(x): # Boucle pour etre sure de la cible
+            target = input(f"Ils faut choisir ine cible existante dans cette liste :\n{Player_party}\n")
+            if target not in Player_party:
+                x+=1
+                print("je veux un vrai joueur")
+
         global taille_list
         modifier += self.Help  # aide
         if self.Player_Action > 0 and taille_list.index(target.get_size()) <= self.size and self.left_arm or self.right_arm == None:
             jet = d20(modifier) + self.Athletisme
-        
         target.contre_lutte()
         if target.contre_lutte <= jet:
-            self.etat
+            self.Grappled()
 
 
 
