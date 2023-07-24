@@ -13,18 +13,18 @@ class Character:
         self.name = name
         self.lvl = lvl 
         self.encombrement = 0
-        self.epuisement_act = 0
+        self.epuisement = 0
         self.debuff_epuisement = 0
-        self.epuisement_prec = 0
+        # self.epuisement_prec = 0
         self.Distance = 10
         self.Player_Action = Action
         self.Player_Action_Bonus = Action_bonus
         self.Player_Reaction = Reaction
-        self.etat = {"lutte": False, 
-                    "prone": False, 
+        self.etat = {"prone": False, 
                     "grappled": False, 
                     "deafened": False, 
-                    "blinded": False, 
+                    "blinded": False,
+                    "charming": False,
                     "charmed": False, 
                     "frightened": False, 
                     "poisoned": False, 
@@ -256,19 +256,19 @@ class Character:
         }
 
         # Verifier si l'epuisement a change depuis la derniere fois
-        if self.epuisement_act != self.epuisement_prec:
+        if self.epuisement != self.epuisement_prec:
             # Recuperer les effets associes a l'epuisement actuel
             effect = epuisement_effects.get(self.epuisement, None)
             if effect:
                 debuff, speed_modifier, malus_hp, death = effect
 
                 # Annuler les malus/debuffs de l'epuisement precedent
-                if self.epuisement_prec in epuisement_effects:
+                """if self.epuisement_prec in epuisement_effects:
                     prev_effect = epuisement_effects[self.epuisement_prec]
                     prev_debuff, prev_speed_modifier, prev_malus_hp, prev_death = prev_effect
                     self.debuff_epuisement -= prev_debuff
                     if prev_speed_modifier is not None:
-                        self.Speed = prev_speed_modifier
+                        self.Speed = prev_speed_modifier"""
 
                 # Appliquer les malus/debuffs de l'epuisement actuel
                 self.debuff_epuisement = debuff
@@ -388,6 +388,14 @@ class Character:
         target_etat = target.get_etat()
         target_etat["blinded"] = True
         print("Vous êtes aveuglé !")
+
+    def Charmed(self, target=None):
+        if target == None:
+            target = self
+        target_etat = target.get_etat()
+        target_etat["blinded"] = True
+        self.etat["charming"] = True
+        print("Vous  !")
     
     
         
