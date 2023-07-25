@@ -13,7 +13,7 @@ Studded_leather = Armor("Cuir clouté", "M", 12, "", "", 6500, gold(45))
 # Armure Intermédiaires [M]
 Half_plate = Armor("Demi-plate", "M",  15, "", "D", 20000, gold(750))
 Breastplate = Armor("Cuirasse", "M", 14, "", "", 10000, gold(400))
-Scale_mail = Armor("Écailles", "M"; 14, "", "D", 22500, gold(50))
+Scale_mail = Armor("Écailles", "M", 14, "", "D", 22500, gold(50))
 Chain_shirt	= Armor("Chemise de mailles", "M", 13, "", "", 10000, gold(50))
 Hide =  Armor("Peaux", "M", 12, "", "", 6000, gold(10))
 
