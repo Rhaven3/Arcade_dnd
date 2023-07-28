@@ -24,8 +24,8 @@ class Character:
                     "grappled": False, 
                     "deafened": False, 
                     "blinded": False,
-                    "charming": False,
                     "charmed": False, 
+                    "charmed_name": None,
                     "frightened": False, 
                     "poisoned": False, 
                     "restrained": False, 
@@ -34,6 +34,7 @@ class Character:
                     "invisible": False, 
                     "paralyzed": False, 
                     "petrified": False}
+        self.charm_list = [self.name]
         self.inventory = []
         # action modifier
         self.Modifier = 0
@@ -357,45 +358,76 @@ class Character:
 
 
     # Etat
-    def Prone(self, target=None):
+    def Prone(self, target=None, desapply=False):
         if target == None:
-            target = self
-        # opton mouvement restreint
-        etat = target.get_etat()
-        etat["prone"] = True
-        print("Vous êtes à terre !")
-
-    def Grappled(self, target=None):
-        if target is not None and not self.etat["incapacited"]:
-            if target == None:
                 target = self
-            target.Speed = 0
-            target_etat = target.get_etat()
-            target_etat
+        etat = target.get_etat()
+        if desapply:
+            etat["prone"] = False
+            print(f"{target.name}. Vous n'êtes plus à terre !")
+        else:
+            # opton mouvement restreint
+            etat["prone"] = True
+            print(f"{target.name}. Vous êtes à terre !")
+
+        
+
+    def Grappled(self, target=None, desapply=False):
+        if target == None:
+            target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat[""] = False
+            print(f"{target.name}. Vous n'êtes plus aggrippé !")
+        else:
+            if target is not None and not self.etat["incapacited"]:
+                target.Speed = 0
+                target_etat
     
-        # à terminer
+        # a terminer
 
-    def Deafened(self, target=None):
+    def Deafened(self, target=None, desapply=False):
         if target == None:
             target = self
         target_etat = target.get_etat()
-        target_etat["deafened"] = True
-        print("Vous êtes assourdi !")
+        if desapply:
+            target_etat["deafaned"] = False
+            print(f"{target.name}. Vous n'êtes plus assourdi !")
+        else:
+            target_etat["deafened"] = True
+            print(f"{target.name}. Vous êtes assourdi !")
 
-    def Blinded(self, target=None):
+
+
+    def Blinded(self, target=None, desapply=False):
+        if target == None:
+                target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["blindedzs decrfvgtbyhnuj,iko;lp:m!^ù£µ"] = False
+            print(f"{target.name}. Vous n'êtes plus aveuglé !")
+        else:
+            target_etat["blinded"] = True
+            print(f"{target.name}. Vous êtes aveuglé !")
+
+        
+
+    def Charmed(self, targe=None, desapply=False):
         if target == None:
             target = self
         target_etat = target.get_etat()
-        target_etat["blinded"] = True
-        print("Vous êtes aveuglé !")
+        if desapply:
+            target_etat["charmed"] = False
+            target_etat["charmed_name"] = None
+            self.charm_list.remove(target.name)
+            print(f"{target.name}. Vous êtes charmé ! Et {self.name} est Charmant !")
+        else:
+            target_etat["charmed"] = True
+            target_etat["charmed_name"] = self.name
+            self.charm_list.append(target.name)
+            print(f"{target.name}. Vous êtes charmé ! Et {self.name} est Charmant !")
 
-    def Charmed(self, target=None):
-        if target == None:
-            target = self
-        target_etat = target.get_etat()
-        target_etat["blinded"] = True
-        self.etat["charming"] = True
-        print("Vous  !")
+    
     
     
         
@@ -598,6 +630,24 @@ class Character:
         bonus = self.mod_For
         modifier += self.Help  # aide
         modifier += self.lourd  # arme lourde
+        if self.etat["prone"]: # desavantage a terre
+            modifier -= 1
+        target_etat = target.get_etat()
+        if target_etat["prone"]: # si cible a terre
+            if isinstance(arme, Weapon):
+                allonge = arme.get_allonge()
+                if allonge <= 1.5:
+                    modifier += 1
+                else:
+                    modifier -= 1
+
+        if self.etat["blinded"]: # desavantage aveugle
+            modifier -= 1
+        target_etat = target.get_etat()
+        if target_etat["blinded"]: # si cible est aveugle
+            modifier += 1
+        if self.epuisement <= 3: # epuisement
+            modifier += self.debuff_epuisement
         arme = None
         cost = 1
         if self.Player_Action_Bonus > 0:
