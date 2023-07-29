@@ -27,6 +27,7 @@ class Character:
                     "charmed": False, 
                     "charmed_name": None,
                     "frightened": False, 
+                    "frightened_name": None,
                     "poisoned": False, 
                     "restrained": False, 
                     "stunned": False, 
@@ -35,6 +36,7 @@ class Character:
                     "paralyzed": False, 
                     "petrified": False}
         self.charm_list = [self.name]
+        self.fright_list = [self.name]
         self.inventory = []
         # action modifier
         self.Modifier = 0
@@ -202,9 +204,11 @@ class Character:
             jet += self.mod_Wis
             return jet
 
-    def jet_Cha(self, modifier=0,competence=""):
+    def jet_Cha(self, modifier=0,competence="", target=None):
             modifier += self.Help
             modifier += self.debuff_epuisement
+            if target in self.charm_list:
+                modifier += 1
             jet = d20(modifier)
             self.Help = 0  # reset de Help
             if competence != "":
@@ -404,7 +408,7 @@ class Character:
                 target = self
         target_etat = target.get_etat()
         if desapply:
-            target_etat["blindedzs decrfvgtbyhnuj,iko;lp:m!^ù£µ"] = False
+            target_etat["blinded"] = False
             print(f"{target.name}. Vous n'êtes plus aveuglé !")
         else:
             target_etat["blinded"] = True
@@ -412,7 +416,7 @@ class Character:
 
         
 
-    def Charmed(self, targe=None, desapply=False):
+    def Charmed(self, target=None, desapply=False):
         if target == None:
             target = self
         target_etat = target.get_etat()
@@ -428,8 +432,21 @@ class Character:
             print(f"{target.name}. Vous êtes charmé ! Et {self.name} est Charmant !")
 
     
-    
-    
+    def frightened(self, target=None, desapply=False):
+        if target == None:
+            target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["frightened"] = False
+            target_etat["frightened_name"] = None
+            self.charm_list.remove(target.name)
+            print(f"{target.name}. Vous êtes charmé ! Et {self.name} est Charmant !")
+        else:
+            target_etat["frightened"] = True
+            target_etat["frightened_name"] = self.name
+            self.fright_list.append(target.name)
+            print(f"{target.name}. Vous êtes effrayé ! Et {self.name} est effrayant !")
+    xx  
         
 
     # Menu
@@ -538,7 +555,9 @@ class Character:
                     modifier += 1
                 else:
                     modifier -= 1
-
+        if target is self.etat["charmed_name"]:
+            print("vous ne pouvez pas attaquez ce bogoss")
+            return
         if self.etat["blinded"]: # desavantage aveugle
             modifier -= 1
         target_etat = target.get_etat()
