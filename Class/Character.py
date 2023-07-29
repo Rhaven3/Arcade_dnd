@@ -432,7 +432,7 @@ class Character:
             print(f"{target.name}. Vous êtes charmé ! Et {self.name} est Charmant !")
 
     
-    def frightened(self, target=None, desapply=False):
+    def Frightened(self, target=None, desapply=False):
         if target == None:
             target = self
         target_etat = target.get_etat()
@@ -446,7 +446,7 @@ class Character:
             target_etat["frightened_name"] = self.name
             self.fright_list.append(target.name)
             print(f"{target.name}. Vous êtes effrayé ! Et {self.name} est effrayant !")
-    
+        # finir deplacement
         
 
     # Menu
