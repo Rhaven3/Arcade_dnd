@@ -446,7 +446,7 @@ class Character:
             target_etat["frightened_name"] = self.name
             self.fright_list.append(target.name)
             print(f"{target.name}. Vous êtes effrayé ! Et {self.name} est effrayant !")
-    xx  
+    
         
 
     # Menu
@@ -555,12 +555,15 @@ class Character:
                     modifier += 1
                 else:
                     modifier -= 1
-        if target is self.etat["charmed_name"]:
+        if target_etat["charmed_name"]: # charm limit
             print("vous ne pouvez pas attaquez ce bogoss")
             return
+        if target_etat["frightened_name"]: # charm limit
+            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+            if x == "oui": # si personne effrayante champ de vision
+                return
         if self.etat["blinded"]: # desavantage aveugle
             modifier -= 1
-        target_etat = target.get_etat()
         if target_etat["blinded"]: # si cible est aveugle
             modifier += 1
         if self.epuisement <= 3: # epuisement
@@ -659,10 +662,15 @@ class Character:
                     modifier += 1
                 else:
                     modifier -= 1
-
+        if target_etat["charmed_name"]:
+            print("vous ne pouvez pas attaquez ce bogoss")
+            return
+        if target_etat["frightened_name"]: # charm limit
+            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+            if x == "oui": # si personne effrayante champ de vision
+                return
         if self.etat["blinded"]: # desavantage aveugle
             modifier -= 1
-        target_etat = target.get_etat()
         if target_etat["blinded"]: # si cible est aveugle
             modifier += 1
         if self.epuisement <= 3: # epuisement
