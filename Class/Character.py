@@ -31,7 +31,8 @@ class Character:
                     "poisoned": False, 
                     "restrained": False, 
                     "stunned": False, 
-                    "incapacited": False, 
+                    "incapacited": False,
+                    "unconscious": False, 
                     "invisible": False, 
                     "paralyzed": False, 
                     "petrified": False}
@@ -135,7 +136,8 @@ class Character:
         # Competence passive
         self.Sag_Perception_Pass = 10+self.Perception
         self.Sag_Intuition_Pass = 10+self.Intuition
-
+        # JdS For/Dex/Con/Int/Sag/Cha
+        self.jds = [self.mod_For, self.mod_Dex, self.mod_Con, self.mod_Int, self.mod_Wis, self.mod_Cha]
 
     # Jet de Caracteristique
     def jet_For(self, modifier=0,competence=""):
@@ -236,6 +238,42 @@ class Character:
         jet = d20(modifier) + self.initiative
         return jet
 
+
+    def JdS(self, stats,modifier=0):
+        stat = None
+        modifier += self.Help
+        modifier += self.debuff_epuisement
+        if self.etat["poisoned"]:
+            modifier -= 1
+        match stats:
+            case "For":
+                if self.etat["stunned"]:
+                    jet = -30
+                    return jet
+                if self.etat["unconscious"]:
+                    jet = -30
+                    return jet
+                stat = self.jds[0]
+            case "Dex":
+                if self.etat["restrained"]:
+                    modifier -= 1
+                if self.etat["stunned"]:
+                    jet = -30
+                    return jet
+                if self.etat["unconscious"]:
+                    jet = -30
+                    return jet
+                stat = self.jds[1]
+            case "Con":
+                stat = self.jds[2]
+            case "Int":
+                stat = self.jds[3]
+            case "Sag":
+                stat = self.jds[4]
+            case "Cha":
+                stat = self.jds[5]
+        jet = d20(modifier) + stat
+        return jet
 
     # encombrement
     def Encombrement(self):
@@ -485,7 +523,66 @@ class Character:
             target_etat["restrained"] = True
             print(f"{target.name}. Vous êtes restreint !")
             self.Speed = 0
-            # save dc à faire
+    
+
+    def Incapacited(self, target=None, desapply=False):
+        if target == None:
+                target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["incapacited"] = False
+            print(f"{target.name}. Vous n'êtes plus Incapacité !")
+        else:
+            target_etat["incapacited"] = True
+            print(f"{target.name}. Vous êtes Incapacité !")
+            self.Player_Action = 0
+            self.Player_Reaction = 0
+
+
+    def Stunned(self, target=None, desapply=False):
+        if target == None:
+                target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["stunned"] = False
+            print(f"{target.name}. Vous n'êtes plus étourdi !")
+            self.Incapacited(self, True)
+        else:
+            target_etat["stunned"] = True
+            print(f"{target.name}. Vous êtes étourdi !")
+            self.Incapacited()
+        
+    def Unconscious(self, target=None, desapply=False):
+        ground = []
+        if target == None:
+                target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["unconscious"] = False
+            print(f"{target.name}. Vous n'êtes plus inconscient !")
+            self.Incapacited(self, True)
+            self.left_arm = ground[0]
+            self.right_arm = ground[1]
+            ground = None 
+        else:
+            target_etat["unconscious"] = True
+            print(f"{target.name}. Vous êtes inconscient !")
+            self.Incapacited()
+            ground = [self.left_arm, self.right_arm]
+            self.right_arm = None
+            self.left_arm = None
+    
+
+    def Invisible(self, target=None, desapply=False):
+        if target == None:
+                target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["invisible"] = False
+            print(f"{target.name}. Vous n'êtes plus invisible !")
+        else:
+            target_etat["invisible"] = True
+            print(f"{target.name}. Vous êtes invisible !")
 
 
     # Menu
@@ -564,7 +661,7 @@ class Character:
                     return
 
 
-    def Modifier(self, modifier, target):
+    def Modifier(self, modifier, arme,  target):
         modifier += self.Help  # aide
         modifier += self.lourd  # arme lourde
         if self.etat["prone"]: # desavantage a terre
@@ -594,6 +691,14 @@ class Character:
             modifier += 1
         if self.etat["restrained"]:
             modifier -= 1
+        if target_etat["stunned"]:
+            modifier += 1
+        if target_etat["unconscious"]:
+            modifier += 1
+        if target_etat["invisible"]:
+            modifier -= 1
+        if self.etat["invisible"]:
+            modifier += 1
         if self.epuisement <= 3: # epuisement
             modifier += self.debuff_epuisement
 
@@ -616,7 +721,7 @@ class Character:
     def attack_action(self, target, arme, modifier=0):
         bonus = self.mod_For
         bonus_dgt = self.mod_For
-        self.Modifier(modifier, target)
+        self.Modifier(modifier, arme,target)
         cost = 1
         if self.Player_Action > 0:
             if self.left_arm or self.right_arm != None:  # si il y a une arme en main
@@ -643,6 +748,11 @@ class Character:
                     crit = 2
                 else:
                     crit = 1
+                    target_etat = target.get_etat()
+                    if target_etat["unconscious"] and isinstance(arme, Weapon):
+                        allonge = arme.get_allonge()
+                        if allonge <= 1.5:
+                            crit = 2
                     print(f"Votre jet d'attaque = {jet_attack}")
                 if jet_attack >= target.get_class_armor():  # si jet > CA
                     print("Vous avez réussi a touché !")
@@ -701,13 +811,13 @@ class Character:
 
     def two_weaponed_attack_AB(self, target,modifier=0):
         bonus = self.mod_For
-        self.Modifier(modifier, target)
         arme = None
         cost = 1
         if self.Player_Action_Bonus > 0:
             if isinstance(self.left_arm, Weapon) and isinstance(self.right_arm, Weapon):
                 if self.left_arm == self.attack_weapon:  # si arme d'attack
                     arme = self.right_arm
+                    self.Modifier(modifier, arme, target)
                     for prop in self.right_arm.get_proprietes():  # si arme finesse
                         match self.right_arm.get_proprietes()[prop]:
                             case "finesse":
@@ -719,6 +829,7 @@ class Character:
                         bonus += self.proficiency
                 elif self.right_arm == self.attack_weapon:
                     arme = self.left_arm
+                    self.Modifier(modifier, arme, target)
                     for prop in self.left_arm.get_proprietes():  # si arme finesse
                         match self.left_arm.get_proprietes()[prop]:
                             case "finesse":
