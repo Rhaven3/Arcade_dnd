@@ -449,6 +449,19 @@ class Character:
         # finir deplacement
         
 
+    def Poisoned(self, target=None, desapply=False):
+        if target == None:
+                target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["poisoned"] = False
+            print(f"{target.name}. Vous n'êtes plus empoisonné !")
+        else:
+            target_etat["poisoned"] = True
+            print(f"{target.name}. Vous êtes empoisonné !")
+
+
+
     # Menu
     def Menu(self):
         if not self.etat["lutte"]:
