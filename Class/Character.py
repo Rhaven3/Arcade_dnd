@@ -142,6 +142,8 @@ class Character:
         modifier += self.Help
         modifier += self.encombrement
         modifier += self.debuff_epuisement
+        if self.etat["poisoned"]:
+            modifier -= 1
         jet = d20(modifier)# jet de de
         self.Help = 0  # reset de Help
         if competence != "":# si comp bonus comp
@@ -158,6 +160,8 @@ class Character:
         modifier += self.Help
         modifier += self.debuff_epuisement
         modifier += self.encombrement
+        if self.etat["poisoned"]:
+            modifier -= 1
         jet = d20(modifier)
         self.Help = 0  # reset de Help
         if competence != "":
@@ -171,6 +175,8 @@ class Character:
         modifier += self.Help
         modifier += self.debuff_epuisement
         modifier += self.encombrement
+        if self.etat["poisoned"]:
+            modifier -= 1
         jet = d20(modifier)
         self.Help = 0  # reset de Help
         if competence != "":
@@ -195,6 +201,8 @@ class Character:
     def jet_Wis(self, modifier=0,competence=""):
         modifier += self.Help
         modifier += self.debuff_epuisement
+        if self.etat["poisoned"]:
+            modifier -= 1
         jet = d20(modifier)
         self.Help = 0  # reset de Help
         if competence != "":
@@ -207,6 +215,8 @@ class Character:
     def jet_Cha(self, modifier=0,competence="", target=None):
             modifier += self.Help
             modifier += self.debuff_epuisement
+            if self.etat["poisoned"]:
+                modifier -= 1
             if target in self.charm_list:
                 modifier += 1
             jet = d20(modifier)
@@ -221,6 +231,8 @@ class Character:
     def jet_initiative(self, modifier=0):
         modifier += self.Help
         modifier += self.debuff_epuisement
+        if self.etat["poisoned"]:
+            modifier -= 1
         jet = d20(modifier) + self.initiative
         return jet
 
@@ -461,6 +473,20 @@ class Character:
             print(f"{target.name}. Vous êtes empoisonné !")
 
 
+    def Restrained(self, target=None, desapply = False):
+        if target == None:
+                target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["restrained"] = False
+            print(f"{target.name}. Vous n'êtes plus restreint !")
+            self.Speed = self.Speed_base
+        else:
+            target_etat["restrained"] = True
+            print(f"{target.name}. Vous êtes restreint !")
+            self.Speed = 0
+            # save dc à faire
+
 
     # Menu
     def Menu(self):
@@ -538,6 +564,40 @@ class Character:
                     return
 
 
+    def Modifier(self, modifier, target):
+        modifier += self.Help  # aide
+        modifier += self.lourd  # arme lourde
+        if self.etat["prone"]: # desavantage a terre
+            modifier -= 1
+        target_etat = target.get_etat()
+        if target_etat["prone"]: # si cible a terre
+            if isinstance(arme, Weapon):
+                allonge = arme.get_allonge()
+                if allonge <= 1.5:
+                    modifier += 1
+                else:
+                    modifier -= 1
+        if target_etat["charmed_name"]:
+            print("vous ne pouvez pas attaquez ce bogoss")
+            return
+        if target_etat["frightened_name"]: # charm limit
+            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+            if x == "oui": # si personne effrayante champ de vision
+                return
+        if self.etat["blinded"]: # desavantage aveugle
+            modifier -= 1
+        if target_etat["blinded"]: # si cible est aveugle
+            modifier += 1
+        if self.etat["poisoned"]: # empoisonne
+            modifier -= 1
+        if target_etat["restrained"]:
+            modifier += 1
+        if self.etat["restrained"]:
+            modifier -= 1
+        if self.epuisement <= 3: # epuisement
+            modifier += self.debuff_epuisement
+
+
     # Action divers
     def pass_tour(self):
         self.Player_Action -= 1
@@ -556,31 +616,7 @@ class Character:
     def attack_action(self, target, arme, modifier=0):
         bonus = self.mod_For
         bonus_dgt = self.mod_For
-        modifier += self.Help  # aide
-        modifier += self.lourd  # arme lourde
-        if self.etat["prone"]: # desavantage a terre
-            modifier -= 1
-        target_etat = target.get_etat()
-        if target_etat["prone"]: # si cible a terre
-            if isinstance(arme, Weapon):
-                allonge = arme.get_allonge()
-                if allonge <= 1.5:
-                    modifier += 1
-                else:
-                    modifier -= 1
-        if target_etat["charmed_name"]: # charm limit
-            print("vous ne pouvez pas attaquez ce bogoss")
-            return
-        if target_etat["frightened_name"]: # charm limit
-            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-            if x == "oui": # si personne effrayante champ de vision
-                return
-        if self.etat["blinded"]: # desavantage aveugle
-            modifier -= 1
-        if target_etat["blinded"]: # si cible est aveugle
-            modifier += 1
-        if self.epuisement <= 3: # epuisement
-            modifier += self.debuff_epuisement
+        self.Modifier(modifier, target)
         cost = 1
         if self.Player_Action > 0:
             if self.left_arm or self.right_arm != None:  # si il y a une arme en main
@@ -626,6 +662,8 @@ class Character:
 
     def search_action(self, modifier=0, comp=""):
         if self.Player_Action > 0:
+            if self.etat["poisoned"]: # empoisonne
+                modifier -= 1
             if comp != "":
                 jet = d20(modifier) + comp
                 print(jet)
@@ -663,31 +701,7 @@ class Character:
 
     def two_weaponed_attack_AB(self, target,modifier=0):
         bonus = self.mod_For
-        modifier += self.Help  # aide
-        modifier += self.lourd  # arme lourde
-        if self.etat["prone"]: # desavantage a terre
-            modifier -= 1
-        target_etat = target.get_etat()
-        if target_etat["prone"]: # si cible a terre
-            if isinstance(arme, Weapon):
-                allonge = arme.get_allonge()
-                if allonge <= 1.5:
-                    modifier += 1
-                else:
-                    modifier -= 1
-        if target_etat["charmed_name"]:
-            print("vous ne pouvez pas attaquez ce bogoss")
-            return
-        if target_etat["frightened_name"]: # charm limit
-            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-            if x == "oui": # si personne effrayante champ de vision
-                return
-        if self.etat["blinded"]: # desavantage aveugle
-            modifier -= 1
-        if target_etat["blinded"]: # si cible est aveugle
-            modifier += 1
-        if self.epuisement <= 3: # epuisement
-            modifier += self.debuff_epuisement
+        self.Modifier(modifier, target)
         arme = None
         cost = 1
         if self.Player_Action_Bonus > 0:
@@ -726,6 +740,8 @@ class Character:
         for i in range(x):
             contre_lutte = input("Voulez vous faire un jet d'Athlétisme ou un jet d'Acrobaties pour résister à la lutte ? \n 1°) jet d'Athlétisme \n 2°) jet d'Acrobaties \n 3°) Ne rien faire\n")
             modifier += self.Help # aide
+            if self.etat["poisoned"]: # empoisonne
+                modifier -= 1
             match contre_lutte:
                 case "1":
                     contre_lutte = d20(modifier) + self.Athletisme
@@ -753,6 +769,8 @@ class Character:
 
         global taille_list
         modifier += self.Help  # aide
+        if self.etat["poisoned"]: # empoisonne
+            modifier -= 1
         if self.Player_Action > 0 and taille_list.index(target.get_size()) <= self.size and self.left_arm or self.right_arm == None:
             jet = d20(modifier) + self.Athletisme
         target.contre_lutte()
