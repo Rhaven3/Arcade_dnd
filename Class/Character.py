@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_int, comp_sag
+from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_int, comp_sag, type_list
 from equipment.Equipment import Weapon, Armor
 
 
@@ -38,6 +38,7 @@ class Character:
                     "petrified": False}
         self.charm_list = [self.name]
         self.fright_list = [self.name]
+        self.disease = []
         self.inventory = []
         # action modifier
         self.Modifier = 0
@@ -105,6 +106,12 @@ class Character:
         self.proficiency = self.prof[self.lvl-1]
         self.Speed = 0
         self.Speed_base = 0
+        self.Res = []
+        self.Imun = []
+        self.Vul = []
+        self.Res_base = []
+        self.Imun_base = []
+        self.Vul_base = []
 
         # proficiencies
         self.prof_weapon = None
@@ -253,6 +260,12 @@ class Character:
                 if self.etat["unconscious"]:
                     jet = -30
                     return jet
+                if self.etat["paralyzed"]:
+                    jet = -30
+                    return jet
+                if self.etat["petrified"]:
+                    jet = -30
+                    return jet
                 stat = self.jds[0]
             case "Dex":
                 if self.etat["restrained"]:
@@ -261,6 +274,12 @@ class Character:
                     jet = -30
                     return jet
                 if self.etat["unconscious"]:
+                    jet = -30
+                    return jet
+                if self.etat["paralyzed"]:
+                    jet = -30
+                    return jet
+                if self.etat["petrified"]:
                     jet = -30
                     return jet
                 stat = self.jds[1]
@@ -409,6 +428,15 @@ class Character:
     
     def get_etat(self):
         return self.etat
+    
+    def get_res(self):
+        return self.Res
+    
+    def get_imun(self):
+        return self.Imun
+    
+    def get_vul(self):
+        return self.Vul
 
 
     # Etat
@@ -585,6 +613,39 @@ class Character:
             print(f"{target.name}. Vous êtes invisible !")
 
 
+    def Paralysed(self, target=None, desapply=False):
+        if target == None:
+                target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["paralyzed"] = False
+            print(f"{target.name}. Vous n'êtes plus paralysé !")
+            self.Incapacited(self, True)
+        else:
+            target_etat["paralyzed"] = True
+            print(f"{target.name}. Vous êtes paralysé !")
+            self.Incapacited()
+
+
+    def Petrified(self, target=None, desapply=False):
+        if target == None:
+                target = self
+        target_etat = target.get_etat()
+        if desapply:
+            target_etat["petrified"] = False
+            print(f"{target.name}. Vous n'êtes plus pétrifier !")
+            self.Incapacited(self, True)
+            self.Res = self.Res_base
+            self.Imun.remove("poison")
+        else:
+            target_etat["petrified"] = True
+            print(f"{target.name}. Vous êtes pétrifier !")
+            self.Incapacited()
+            for types in type_list:
+                self.Res.append(types)
+            self.Imun.append("poison")
+            # no effect disease
+
     # Menu
     def Menu(self):
         if not self.etat["lutte"]:
@@ -699,6 +760,10 @@ class Character:
             modifier -= 1
         if self.etat["invisible"]:
             modifier += 1
+        if target_etat["paralyzed"]:
+            modifier += 1
+        if target_etat["petrified"]:
+            modifier += 1
         if self.epuisement <= 3: # epuisement
             modifier += self.debuff_epuisement
 
@@ -715,7 +780,13 @@ class Character:
     def damage(self, arme, bonus=0, crit=1):
         if arme != self.Nat_weapon:
             dmg = (arme.get_Dgt() + bonus)*crit
-            print("Vous avez fait ", dmg, "de dégats")
+            if arme.get_dgt_type() in self.Res:
+                dmg /= 2
+            if arme.get_dgt_type() in self.Imun:
+                dmg = 0
+            if arme.get_dgt_type() in self.Vul:
+                dmg *= 2
+            print("Vous avez fait ", dmg, "de dégats à ", self.name)
             self.PV_tot -= dmg
 
     def attack_action(self, target, arme, modifier=0):
@@ -750,6 +821,10 @@ class Character:
                     crit = 1
                     target_etat = target.get_etat()
                     if target_etat["unconscious"] and isinstance(arme, Weapon):
+                        allonge = arme.get_allonge()
+                        if allonge <= 1.5:
+                            crit = 2
+                    if target_etat["paralyzed"] and isinstance(arme, Weapon):
                         allonge = arme.get_allonge()
                         if allonge <= 1.5:
                             crit = 2

@@ -26,6 +26,9 @@ class Weapon:
     
     def get_dgt(self):
         return self.dgt
+    
+    def get_dgt_type(self):
+        return self.dgt_type
 
     def get_poids(self):
         return self.poids

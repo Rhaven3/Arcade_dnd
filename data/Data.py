@@ -273,6 +273,8 @@ taille_list = ["TP", "P", "M", "G", "TG", "Gig"]
 # Compétence Int
 comp_int = ["Arcane", "Histoire", "Investigation", "Nature", "Religion"]
 comp_sag = ["Dressage", "Intuition", "Medecine", "Perception", "Perspicacité", "Survie"]
+# type list
+type_list = ["tranchant", "contendant", "perforant", "acide", "feu", "force", "foudre", "froid", "necrotique", "poison", "psychique", "radiant", "tonnerre"]
 
 # Tour
 Action = 1
