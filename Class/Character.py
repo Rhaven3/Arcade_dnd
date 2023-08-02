@@ -649,7 +649,7 @@ class Character:
     # Menu
     def Menu(self):
         if not self.etat["lutte"]:
-            Action = input(f"C'est à votre tour, vous avez [{self.Player_Action}] Action\n 1°) Attaquer\n 2°) Aider\n 3°) Rechercher\n 4°) Esquiver\n 5°) Se Cacher\n 6°) Se préparer\n 7°) Prise de lutte\n 8°) Passer son tour\n")
+            Action = input(f"C'est à votre tour, vous avez [{self.Player_Action}] Action\n 1°) Attaquer\n 2°) Aider\n 3°) Rechercher\n 4°) Esquiver\n 5°) Se Cacher\n 6°) Se préparer\n 7°) Prise de lutte\n 8°) Passer son tour\n 9°) Un jet de dé banal\n 10°) Regarder son inventaire\n")
             match Action:
                 case "1": # Attack
                     Player_party = listing().Player_party
@@ -718,7 +718,9 @@ class Character:
                     return
                 case "8": # Pass
                     return
-                case "9": # show inventory
+                case "9": # jet de dé
+                    return
+                case "10": # show inventory
                     return
 
 
