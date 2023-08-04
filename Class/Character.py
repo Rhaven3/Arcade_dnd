@@ -21,7 +21,8 @@ class Character:
         self.Player_Action_Bonus = Action_bonus
         self.Player_Reaction = Reaction
         self.etat = {"prone": False, 
-                    "grappled": False, 
+                    "grappled": False,
+                    "grappled_name": None,
                     "deafened": False, 
                     "blinded": False,
                     "charmed": False, 
@@ -84,6 +85,7 @@ class Character:
 
         # Stats
         self.DV = 0
+        self.DV_nbr = 0
         self.lvl_up = []
         self.PV_base = self.get_DV()+self.mod_Con
             # Verif rule
@@ -104,8 +106,15 @@ class Character:
         self.class_armor = 10 + self.mod_Dex
         self.prof = [2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6]
         self.proficiency = self.prof[self.lvl-1]
+        # deplacement
         self.Speed = 0
         self.Speed_base = 0
+        self.long_jump = self.attributes[0]/3
+        self.long_jump_SE = self.long_jump/2
+        self.jump = max(self.long_jump+1, 0)
+        self.jump_BT = self.jump+self.size/2
+        self.jump_SE = self.jump/2
+        # res/imun/vul
         self.Res = []
         self.Imun = []
         self.Vul = []
@@ -153,6 +162,10 @@ class Character:
         modifier += self.debuff_epuisement
         if self.etat["poisoned"]:
             modifier -= 1
+        if self.etat["frightened_name"]: # charm limit
+                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+                if x == "oui": # si personne effrayante champ de vision
+                    modifier -= 1
         jet = d20(modifier)# jet de de
         self.Help = 0  # reset de Help
         if competence != "":# si comp bonus comp
@@ -171,6 +184,10 @@ class Character:
         modifier += self.encombrement
         if self.etat["poisoned"]:
             modifier -= 1
+        if self.etat["frightened_name"]: # charm limit
+                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+                if x == "oui": # si personne effrayante champ de vision
+                    modifier -= 1
         jet = d20(modifier)
         self.Help = 0  # reset de Help
         if competence != "":
@@ -186,6 +203,10 @@ class Character:
         modifier += self.encombrement
         if self.etat["poisoned"]:
             modifier -= 1
+        if self.etat["frightened_name"]: # charm limit
+                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+                if x == "oui": # si personne effrayante champ de vision
+                    modifier -= 1
         jet = d20(modifier)
         self.Help = 0  # reset de Help
         if competence != "":
@@ -198,6 +219,12 @@ class Character:
     def jet_Int(self, modifier=0,competence=""):
         modifier += self.Help
         modifier += self.debuff_epuisement
+        if self.etat["poisoned"]:
+            modifier -= 1
+        if self.etat["frightened_name"]: # charm limit
+                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+                if x == "oui": # si personne effrayante champ de vision
+                    modifier -= 1
         jet = d20(modifier)
         self.Help = 0  # reset de Help
         if competence != "":
@@ -212,6 +239,10 @@ class Character:
         modifier += self.debuff_epuisement
         if self.etat["poisoned"]:
             modifier -= 1
+        if self.etat["frightened_name"]: # charm limit
+                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+                if x == "oui": # si personne effrayante champ de vision
+                    modifier -= 1
         jet = d20(modifier)
         self.Help = 0  # reset de Help
         if competence != "":
@@ -228,6 +259,10 @@ class Character:
                 modifier -= 1
             if target in self.charm_list:
                 modifier += 1
+            if self.etat["frightened_name"]: # charm limit
+                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+                if x == "oui": # si personne effrayante champ de vision
+                    modifier -= 1
             jet = d20(modifier)
             self.Help = 0  # reset de Help
             if competence != "":
@@ -242,6 +277,10 @@ class Character:
         modifier += self.debuff_epuisement
         if self.etat["poisoned"]:
             modifier -= 1
+        if self.etat["frightened_name"]: # charm limit
+            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+            if x == "oui": # si personne effrayante champ de vision
+                modifier -= 1
         jet = d20(modifier) + self.initiative
         return jet
 
@@ -304,6 +343,9 @@ class Character:
         elif self.Charge >= self.CC:
             self.Speed = 0
             self.encombrement -= 1
+        else:
+            self.Speed = self.Speed_base
+            self.encombrement = 0
 
 
 
@@ -365,6 +407,38 @@ class Character:
                     
             # Mettre a jour l'epuisement precedent
             self.epuisement_proc = self.epuisement
+
+    
+    # rest
+    def short_rest(self):
+        x=1
+        global d
+        for i in range(x):
+            dd = input(f"Combien de dé de vie voulait vous utilisez pour regagner des points de vie ?\n Il vous reste : {self.DV} Dé de Vie\n")
+            if dd > self.lvl:
+                x+=1
+                print(" Mec y en a trop là t'es dans l'excès")
+        self.DV_nbr -= dd
+        print(f"Nombre de dé utiliser : {dd}\n modificateur de Constitution : {self.mod_Con}\n Dé de Vie restant : {self.DV_nbr}")
+        jet_dd = d(self.DV, 0, dd)
+        print(f"chaque dé : {jet_dd[1]}\n le total brut: {jet_dd[0]}")
+        jet_dd = jet_dd[0] + self.mod_Con
+        jet_dd = max(jet_dd, 0)
+        print(f"Total de PV restauré : {jet_dd}")
+        self.PV_tot += jet_dd
+        self.check_hp()
+
+    def long_rest(self):
+        x=1
+        global d
+        for i in range(x):
+            dd = input(f"Combien de dé de vie voulait vous utilisez pour regagner des points de vie ?\n Il vous reste : {self.DV} Dé de Vie\n")
+            if dd > self.lvl:
+                x+=1
+                print(" Mec y en a trop là t'es dans l'excès")
+
+    # Distance
+    # a voir
 
 
     # get stats principal
@@ -458,15 +532,19 @@ class Character:
         if target == None:
             target = self
         target_etat = target.get_etat()
-        if desapply:
-            target_etat[""] = False
-            print(f"{target.name}. Vous n'êtes plus aggrippé !")
+        if target is not None and not self.etat["incapacited"]:   
+            target_etat["grappled"] = True
+            target_etat["grappled_name"] = self.name
+            target.Speed = 0
         else:
-            if target is not None and not self.etat["incapacited"]:
-                target.Speed = 0
-                target_etat
-    
-        # a terminer
+            desapply = True
+        # if out of distance end grappled
+        if desapply:
+            target_etat["grappled"] = False
+            target_etat["grappled_name"] = self.name
+            print(f"{target.name}. Vous n'êtes plus aggrippé !")
+            target.Speed = target.Speed_base
+
 
     def Deafened(self, target=None, desapply=False):
         if target == None:
@@ -517,7 +595,7 @@ class Character:
         if desapply:
             target_etat["frightened"] = False
             target_etat["frightened_name"] = None
-            self.charm_list.remove(target.name)
+            self.fright_list.remove(target.name)
             print(f"{target.name}. Vous êtes charmé ! Et {self.name} est Charmant !")
         else:
             target_etat["frightened"] = True
@@ -546,11 +624,11 @@ class Character:
         if desapply:
             target_etat["restrained"] = False
             print(f"{target.name}. Vous n'êtes plus restreint !")
-            self.Speed = self.Speed_base
+            target.Speed = target.Speed_base
         else:
             target_etat["restrained"] = True
             print(f"{target.name}. Vous êtes restreint !")
-            self.Speed = 0
+            target.Speed = 0
     
 
     def Incapacited(self, target=None, desapply=False):
@@ -563,8 +641,8 @@ class Character:
         else:
             target_etat["incapacited"] = True
             print(f"{target.name}. Vous êtes Incapacité !")
-            self.Player_Action = 0
-            self.Player_Reaction = 0
+            target.Player_Action = 0
+            target.Player_Reaction = 0
 
 
     def Stunned(self, target=None, desapply=False):
@@ -574,11 +652,11 @@ class Character:
         if desapply:
             target_etat["stunned"] = False
             print(f"{target.name}. Vous n'êtes plus étourdi !")
-            self.Incapacited(self, True)
+            target.Incapacited(self, True)
         else:
             target_etat["stunned"] = True
             print(f"{target.name}. Vous êtes étourdi !")
-            self.Incapacited()
+            target.Incapacited()
         
     def Unconscious(self, target=None, desapply=False):
         ground = []
@@ -588,17 +666,17 @@ class Character:
         if desapply:
             target_etat["unconscious"] = False
             print(f"{target.name}. Vous n'êtes plus inconscient !")
-            self.Incapacited(self, True)
-            self.left_arm = ground[0]
-            self.right_arm = ground[1]
+            target.Incapacited(self, True)
+            target.left_arm = ground[0]
+            target.right_arm = ground[1]
             ground = None 
         else:
             target_etat["unconscious"] = True
             print(f"{target.name}. Vous êtes inconscient !")
-            self.Incapacited()
-            ground = [self.left_arm, self.right_arm]
-            self.right_arm = None
-            self.left_arm = None
+            target.Incapacited()
+            ground = [target.left_arm, target.right_arm]
+            target.right_arm = None
+            target.left_arm = None
     
 
     def Invisible(self, target=None, desapply=False):
@@ -620,11 +698,11 @@ class Character:
         if desapply:
             target_etat["paralyzed"] = False
             print(f"{target.name}. Vous n'êtes plus paralysé !")
-            self.Incapacited(self, True)
+            target.Incapacited(self, True)
         else:
             target_etat["paralyzed"] = True
             print(f"{target.name}. Vous êtes paralysé !")
-            self.Incapacited()
+            target.Incapacited()
 
 
     def Petrified(self, target=None, desapply=False):
@@ -634,16 +712,16 @@ class Character:
         if desapply:
             target_etat["petrified"] = False
             print(f"{target.name}. Vous n'êtes plus pétrifier !")
-            self.Incapacited(self, True)
-            self.Res = self.Res_base
-            self.Imun.remove("poison")
+            target.Incapacited(self, True)
+            target.Res = target.Res_base
+            target.Imun.remove("poison")
         else:
             target_etat["petrified"] = True
             print(f"{target.name}. Vous êtes pétrifier !")
-            self.Incapacited()
+            target.Incapacited()
             for types in type_list:
-                self.Res.append(types)
-            self.Imun.append("poison")
+                target.Res.append(types)
+            target.Imun.append("poison")
             # no effect disease
 
     # Menu
@@ -743,7 +821,7 @@ class Character:
         if target_etat["frightened_name"]: # charm limit
             x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
             if x == "oui": # si personne effrayante champ de vision
-                return
+                modifier -= 1
         if self.etat["blinded"]: # desavantage aveugle
             modifier -= 1
         if target_etat["blinded"]: # si cible est aveugle
