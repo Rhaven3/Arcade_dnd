@@ -167,12 +167,19 @@ class Character:
                 if x == "oui": # si personne effrayante champ de vision
                     modifier -= 1
         jet = d20(modifier)# jet de de
+        print(f"Jet brut : {jet[0]}")
+        if jet == 20:
+            print("C'est un miracle !")
+        elif jet == 1:
+            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":# si comp bonus comp
             jet += competence
+            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
             return jet
         else:# sinon simple jet for
             jet += self.mod_For
+            print(f"Votre modificateur de force : {self.mod_For}\nJet final : {jet}")
             return jet
     
     def jet_Dex(self, modifier=0,competence=""):
@@ -189,12 +196,19 @@ class Character:
                 if x == "oui": # si personne effrayante champ de vision
                     modifier -= 1
         jet = d20(modifier)
+        print(f"Jet brut : {jet[0]}")
+        if jet == 20:
+            print("C'est un miracle !")
+        elif jet == 1:
+            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":
             jet += competence
+            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
             return jet
         else:
             jet += self.mod_Dex
+            print(f"Votre modificateur de dextérité : {self.mod_Dex}\nJet final : {jet}")
             return jet
 
     def jet_Con(self, modifier=0,competence=""):
@@ -208,12 +222,19 @@ class Character:
                 if x == "oui": # si personne effrayante champ de vision
                     modifier -= 1
         jet = d20(modifier)
+        print(f"Jet brut : {jet[0]}")
+        if jet == 20:
+            print("C'est un miracle !")
+        elif jet == 1:
+            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":
             jet += competence
+            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
             return jet
         else:
             jet += self.mod_Con
+            print(f"Votre modificateur de constitution : {self.mod_Con}\nJet final : {jet}")
             return jet
     
     def jet_Int(self, modifier=0,competence=""):
@@ -226,12 +247,19 @@ class Character:
                 if x == "oui": # si personne effrayante champ de vision
                     modifier -= 1
         jet = d20(modifier)
+        print(f"Jet brut : {jet[0]}")
+        if jet == 20:
+            print("C'est un miracle !")
+        elif jet == 1:
+            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":
             jet += competence
+            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
             return jet
         else:
             jet += self.mod_Int
+            print(f"Votre modificateur de intélligence : {self.mod_Int}\nJet final : {jet}")
             return jet
 
     def jet_Wis(self, modifier=0,competence=""):
@@ -244,33 +272,47 @@ class Character:
                 if x == "oui": # si personne effrayante champ de vision
                     modifier -= 1
         jet = d20(modifier)
+        print(f"Jet brut : {jet[0]}")
+        if jet == 20:
+            print("C'est un miracle !")
+        elif jet == 1:
+            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":
             jet += competence
+            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
             return jet
         else:
             jet += self.mod_Wis
+            print(f"Votre modificateur de Sagesse : {self.mod_Wis}\nJet final : {jet}")
             return jet
 
     def jet_Cha(self, modifier=0,competence="", target=None):
-            modifier += self.Help
-            modifier += self.debuff_epuisement
-            if self.etat["poisoned"]:
+        modifier += self.Help
+        modifier += self.debuff_epuisement
+        if self.etat["poisoned"]:
+            modifier -= 1
+        if target in self.charm_list:
+            modifier += 1
+        if self.etat["frightened_name"]: # charm limit
+            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+            if x == "oui": # si personne effrayante champ de vision
                 modifier -= 1
-            if target in self.charm_list:
-                modifier += 1
-            if self.etat["frightened_name"]: # charm limit
-                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-                if x == "oui": # si personne effrayante champ de vision
-                    modifier -= 1
-            jet = d20(modifier)
-            self.Help = 0  # reset de Help
-            if competence != "":
-                jet += competence
-                return jet
-            else:
-                jet += self.mod_Cha
-                return jet
+        jet = d20(modifier)
+        print(f"Jet brut : {jet[0]}")
+        if jet == 20:
+            print("C'est un miracle !")
+        elif jet == 1:
+            print("C'est un désastre !")
+        self.Help = 0  # reset de Help
+        if competence != "":
+            jet += competence
+            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
+            return jet
+        else:
+            jet += self.mod_Cha
+            print(f"Votre modificateur de charisme : {self.mod_Cha}\nJet final : {jet}")
+            return jet
     
     def jet_initiative(self, modifier=0):
         modifier += self.Help
@@ -281,7 +323,14 @@ class Character:
             x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
             if x == "oui": # si personne effrayante champ de vision
                 modifier -= 1
-        jet = d20(modifier) + self.initiative
+        jet = d20(modifier)
+        if jet == 20:
+            print("C'est un miracle !")
+        elif jet == 1:
+            print("C'est un désastre !")
+        print(f"Jet brut : {jet[0]}\n Votre initiative : {self.initiative}")
+        jet += self.initiative
+        print(f"Jet final : {jet}")
         return jet
 
 
@@ -330,7 +379,13 @@ class Character:
                 stat = self.jds[4]
             case "Cha":
                 stat = self.jds[5]
-        jet = d20(modifier) + stat
+        jet = d20(modifier)
+        print(f"Jet brut : {jet}\n Votre bonus au jet de sauvegarde de {stats} : {stat}")
+        if jet == 20:
+            print("C'est un miracle !")
+        elif jet == 1:
+            print("C'est un désastre !")
+        jet += stat
         return jet
 
     # encombrement
@@ -427,6 +482,7 @@ class Character:
         print(f"Total de PV restauré : {jet_dd}")
         self.PV_tot += jet_dd
         self.check_hp()
+
 
     def long_rest(self):
         x=1
@@ -923,9 +979,13 @@ class Character:
                     arme = self.Nat_weapon  # sinon attack with naturel weapon
                 self.attack_weapon = arme
                 jet_attack = d20(modifier) + bonus
+                print(f"Jet brut : {jet_attack - bonus}\nBonus d'attaque : {bonus}\nJet final : {jet_attack}")
                 if jet_attack - bonus == 20:
                     print("Vous avez réussi un coup critique !")
                     crit = 2
+                elif jet_attack - bonus == 1:
+                    print("Vous avait fait un désastre !")
+                    crit = 1
                 else:
                     crit = 1
                     target_etat = target.get_etat()
