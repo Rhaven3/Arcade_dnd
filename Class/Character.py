@@ -168,10 +168,6 @@ class Character:
                     modifier -= 1
         jet = d20(modifier)# jet de de
         print(f"Jet brut : {jet[0]}")
-        if jet == 20:
-            print("C'est un miracle !")
-        elif jet == 1:
-            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":# si comp bonus comp
             jet += competence
@@ -197,10 +193,6 @@ class Character:
                     modifier -= 1
         jet = d20(modifier)
         print(f"Jet brut : {jet[0]}")
-        if jet == 20:
-            print("C'est un miracle !")
-        elif jet == 1:
-            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":
             jet += competence
@@ -223,10 +215,6 @@ class Character:
                     modifier -= 1
         jet = d20(modifier)
         print(f"Jet brut : {jet[0]}")
-        if jet == 20:
-            print("C'est un miracle !")
-        elif jet == 1:
-            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":
             jet += competence
@@ -248,10 +236,6 @@ class Character:
                     modifier -= 1
         jet = d20(modifier)
         print(f"Jet brut : {jet[0]}")
-        if jet == 20:
-            print("C'est un miracle !")
-        elif jet == 1:
-            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":
             jet += competence
@@ -273,10 +257,6 @@ class Character:
                     modifier -= 1
         jet = d20(modifier)
         print(f"Jet brut : {jet[0]}")
-        if jet == 20:
-            print("C'est un miracle !")
-        elif jet == 1:
-            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":
             jet += competence
@@ -300,10 +280,6 @@ class Character:
                 modifier -= 1
         jet = d20(modifier)
         print(f"Jet brut : {jet[0]}")
-        if jet == 20:
-            print("C'est un miracle !")
-        elif jet == 1:
-            print("C'est un désastre !")
         self.Help = 0  # reset de Help
         if competence != "":
             jet += competence
@@ -324,10 +300,6 @@ class Character:
             if x == "oui": # si personne effrayante champ de vision
                 modifier -= 1
         jet = d20(modifier)
-        if jet == 20:
-            print("C'est un miracle !")
-        elif jet == 1:
-            print("C'est un désastre !")
         print(f"Jet brut : {jet[0]}\n Votre initiative : {self.initiative}")
         jet += self.initiative
         print(f"Jet final : {jet}")
@@ -381,10 +353,6 @@ class Character:
                 stat = self.jds[5]
         jet = d20(modifier)
         print(f"Jet brut : {jet}\n Votre bonus au jet de sauvegarde de {stats} : {stat}")
-        if jet == 20:
-            print("C'est un miracle !")
-        elif jet == 1:
-            print("C'est un désastre !")
         jet += stat
         return jet
 
@@ -981,10 +949,8 @@ class Character:
                 jet_attack = d20(modifier) + bonus
                 print(f"Jet brut : {jet_attack - bonus}\nBonus d'attaque : {bonus}\nJet final : {jet_attack}")
                 if jet_attack - bonus == 20:
-                    print("Vous avez réussi un coup critique !")
                     crit = 2
                 elif jet_attack - bonus == 1:
-                    print("Vous avait fait un désastre !")
                     crit = 1
                 else:
                     crit = 1
@@ -1018,18 +984,20 @@ class Character:
         if self.Player_Action > 0:
             if self.etat["poisoned"]: # empoisonne
                 modifier -= 1
+            jet = d20(modifier)
+            print(f"Jet brut : {jet}")
             if comp != "":
-                jet = d20(modifier) + comp
-                print(jet)
+                jet += comp
+                print(f"Bonus de compétence : {comp}\nJet final : {jet}")
             else:
                 x = random.randint(1, 2)
                 match x:
                     case 1:
-                        jet = d20(modifier) + self.Perception
-                        print(jet)
+                        jet += self.Perception
+                        print(f"Bonus de perception : {self.Perception}\nJet final : {jet}")
                     case 2:
-                        jet = d20(modifier) + self.Investigation
-                        print(jet)
+                        jet += self.Investigation
+                        print(f"Bonus d'Investigation : {self.Investigation}\nJet final : {jet}")
             self.Player_Action -= 1
 
     def dodge_action(self):
@@ -1059,6 +1027,7 @@ class Character:
         cost = 1
         if self.Player_Action_Bonus > 0:
             if isinstance(self.left_arm, Weapon) and isinstance(self.right_arm, Weapon):
+                jet = 0
                 if self.left_arm == self.attack_weapon:  # si arme d'attack
                     arme = self.right_arm
                     self.Modifier(modifier, arme, target)
@@ -1069,6 +1038,7 @@ class Character:
                                     bonus = self.mod_Dex  # bonus dex
                             case "légère":
                                 jet = d20(modifier) + bonus
+                                print(f"Jet brut : {jet-bonus}\nBonus d'attaque : {bonus}\nJet final : {jet}")
                     if self.right_arm in self.prof_weapon:  # si arm proficiency bonus proficiency
                         bonus += self.proficiency
                 elif self.right_arm == self.attack_weapon:
@@ -1081,6 +1051,7 @@ class Character:
                                     bonus = self.mod_Dex  # bonus dex
                             case "légère":
                                 jet = d20(modifier) + bonus
+                                print(f"Jet brut : {jet-bonus}\nBonus d'attaque : {bonus}\nJet final : {jet}")
                             case "chargement":
                                 cost = 10
                     if self.right_arm in self.prof_weapon:  # si arm proficiency bonus proficiency
@@ -1100,9 +1071,12 @@ class Character:
             match contre_lutte:
                 case "1":
                     contre_lutte = d20(modifier) + self.Athletisme
+                    print(f"Jet brut : {contre_lutte-self.Athletisme}\nBonus d'Athletisme : {self.Athletisme}\nJet final : {contre_lutte}")
+                    
                     return contre_lutte
                 case "2":
                     contre_lutte = d20(modifier) + self.Acrobaties
+                    print(f"Jet brut : {contre_lutte-self.Acrobaties}\nBonus d'Acrobaties : {self.Acrobaties}\nJet final : {contre_lutte}")
                     return contre_lutte
                 case "3":
                     contre_lutte = 0
@@ -1128,6 +1102,7 @@ class Character:
             modifier -= 1
         if self.Player_Action > 0 and taille_list.index(target.get_size()) <= self.size and self.left_arm or self.right_arm == None:
             jet = d20(modifier) + self.Athletisme
+            print(f"Jet brut : {jet-self.Athletisme}\nBonus d'Athletisme : {self.Athletisme}\nJet final : {jet}")
         target.contre_lutte()
         if target.contre_lutte <= jet:
             self.Grappled()

@@ -40,11 +40,19 @@ def d20(modifier=0, x=1):
             for i in range(2):
                 rd20.append(randint(1, 20))
                 sumd = max(rd20)
+            if sumd == 20:
+                print("C'est un miracle !")
+            elif jet == 1:
+                print("C'est un désastre !")
             return sumd
         case -1:
             for i in range(2):
                 rd20.append(randint(1, 20))
                 sumd = min(rd20)
+            if sumd == 20:
+                print("C'est un miracle !")
+            elif jet == 1:
+                print("C'est un désastre !")
             return sumd
         case other:
             for i in range(0, x):
