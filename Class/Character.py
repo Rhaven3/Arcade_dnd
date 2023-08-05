@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_int, comp_sag, type_list
+from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_int, comp_sag, type_list, Regen_rule
 from equipment.Equipment import Weapon, Armor
 
 
@@ -91,7 +91,7 @@ class Character:
             # Verif rule
         PV_roll()
         self.finesse_dex = finesse_rule()
-
+        self.regen_pv = Regen_rule()
         self.PV_lvl = 0
         for lvls in range(self.lvl-1):# gain HP par lvl + save []
             self.PV_lvl += PV_rule(10) + self.mod_Con
@@ -422,7 +422,7 @@ class Character:
         print(f"Nombre de dé utiliser : {dd}\n modificateur de Constitution : {self.mod_Con}\n Dé de Vie restant : {self.DV_nbr}")
         jet_dd = d(self.DV, 0, dd)
         print(f"chaque dé : {jet_dd[1]}\n le total brut: {jet_dd[0]}")
-        jet_dd = jet_dd[0] + self.mod_Con
+        jet_dd = jet_dd[0] + self.mod_Con*dd
         jet_dd = max(jet_dd, 0)
         print(f"Total de PV restauré : {jet_dd}")
         self.PV_tot += jet_dd
@@ -430,12 +430,41 @@ class Character:
 
     def long_rest(self):
         x=1
+        y=1
+        ep = False
         global d
         for i in range(x):
-            dd = input(f"Combien de dé de vie voulait vous utilisez pour regagner des points de vie ?\n Il vous reste : {self.DV} Dé de Vie\n")
-            if dd > self.lvl:
+            if not self.regen_pv:
+                dd = input(f"Combien de dé de vie voulait vous utilisez pour regagner des points de vie ?\n Il vous reste : {self.DV} Dé de Vie\n")
+            if self.regen_pv and dd > self.lvl/2:
                 x+=1
                 print(" Mec y en a trop là t'es dans l'excès")
+        for i in range(y):
+            nut = input("Es que vous avez bu et mangé ?")
+            match nut:
+                case "oui":
+                    ep = True
+                case "non":
+                    ep = False
+                case other:
+                    y += 1
+        if self.regen_pv:
+            self.DV_nbr = self.lvl
+            print(f"Nombre de dé utiliser : {dd}\n modificateur de Constitution : {self.mod_Con}")
+            jet_dd = d(self.DV, 0, dd)
+            print(f"chaque dé : {jet_dd[1]}\n le total brut: {jet_dd[0]}")
+            jet_dd = jet_dd[0] + self.mod_Con*dd
+            jet_dd = max(jet_dd, 0)
+            print(f"Total de PV restauré : {jet_dd}")
+        else:
+            self.DV_nbr = self.lvl/2
+            jet_dd = self.PV_Max
+        self.PV_tot += jet_dd
+        self.check_hp()
+        if ep and self.epuisement != 0:
+                self.epuisement -= 1
+                self.Epuisement()
+
 
     # Distance
     # a voir

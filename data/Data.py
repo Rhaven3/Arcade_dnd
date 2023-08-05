@@ -398,13 +398,14 @@ conn.close()
 # Règles
 PV_Roll = False
 Finesse_dex = False
+Regen_PV = False
 
 # Def règles
 def PV_roll():
     global PV_Roll
     x = 1
-    rule = input("Vos PV sont lancé avec des dés, ou une valeurs fixe ? (oui ou non)\n")
     for i in range(x):
+        rule = input("Vos PV sont lancé avec des dés, ou une valeurs fixe ? (oui ou non)\n")
         match rule:
             case "oui":
                 PV_Roll = True
@@ -432,8 +433,8 @@ def PV_rule(d1, modifier="", lvl=1):
 def finesse_rule():
     global Finesse_dex
     x = 1
-    rule = input("Vous utilisé des armes finesse avec For ou dex ?\n")
     for i in range(x):
+        rule = input("Vous utilisé des armes finesse avec For ou dex ?\n")
         match rule:
             case "For":
                 Finesse_dex = False
@@ -441,5 +442,20 @@ def finesse_rule():
             case "Dex":
                 Finesse_dex = True
                 return Finesse_dex
+            case other:
+                x += 1
+
+def Regen_rule():
+    global Regen_PV
+    x = 1
+    for i in range(x):
+        rule = input("Voulez vous utilisez une règle variante pour les repos long ?\nSi oui, Vous ne pourrez utilisez que la moitié de vos dé de vie durant un repos long et il seront complètement récuperer après\n")
+        match rule:
+            case "oui":
+                Regen_PV = True
+                return Regen_PV
+            case "non":
+                Regen_PV = False
+                return Regen_PV
             case other:
                 x += 1
