@@ -8,7 +8,7 @@ from data.Data import d10, d12, d4, d6, d8, platinium, gold, etherum, copper, si
 # Armure légères [L]
 Leather = Armor("Cuir", "L", 11, "", "D", 5000, gold(10))
 Padded = Armor("Matelassée", "L", 11, "", "", 4000, gold(5))
-Studded_leather = Armor("Cuir clouté", "M", 12, "", "", 6500, gold(45))
+Studded_leather = Armor("Cuir clouté", "L", 12, "", "", 6500, gold(45))
 
 # Armure Intermédiaires [M]
 Half_plate = Armor("Demi-plate", "M",  15, "", "D", 20000, gold(750))
