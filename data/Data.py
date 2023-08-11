@@ -42,7 +42,7 @@ def d20(modifier=0, x=1):
                 sumd = max(rd20)
             if sumd == 20:
                 print("C'est un miracle !")
-            elif jet == 1:
+            elif sumd == 1:
                 print("C'est un désastre !")
             return sumd
         case -1:
@@ -51,13 +51,17 @@ def d20(modifier=0, x=1):
                 sumd = min(rd20)
             if sumd == 20:
                 print("C'est un miracle !")
-            elif jet == 1:
+            elif sumd == 1:
                 print("C'est un désastre !")
             return sumd
         case other:
             for i in range(0, x):
                 rd20.append(randint(1, 20))
                 sumd += rd20[i]
+            if sumd == 20 and x==1:
+                print("C'est un miracle !")
+            elif sumd == 1 and x==1:
+                print("C'est un désastre !")
             return [sumd, rd20]
 
 
@@ -281,6 +285,8 @@ taille_list = ["TP", "P", "M", "G", "TG", "Gig"]
 # Compétence Int
 comp_int = ["Arcane", "Histoire", "Investigation", "Nature", "Religion"]
 comp_sag = ["Dressage", "Intuition", "Medecine", "Perception", "Perspicacité", "Survie"]
+comp_dex = ["Acrobaties", "Discretion", "Escamotage"]
+comp_cha = ["Intimidation", "Persuasion", "Representation", "Tromperie"]
 # type list
 type_list = ["tranchant", "contendant", "perforant", "acide", "feu", "force", "foudre", "froid", "necrotique", "poison", "psychique", "radiant", "tonnerre"]
 
@@ -407,6 +413,7 @@ conn.close()
 PV_Roll = False
 Finesse_dex = False
 Regen_PV = False
+comp_rule = False
 
 # Def règles
 def PV_roll():
@@ -465,5 +472,20 @@ def Regen_rule():
             case "non":
                 Regen_PV = False
                 return Regen_PV
+            case other:
+                x += 1
+
+def Comp_rule():
+    global comp_rule
+    x = 1
+    for i in range(x):
+        rule = input("Voulez vous utilisez des jet de compétence variant ?\n C'est à dire en fonction de la situation ça peut être une stat différente que c'elle de base qui rentre en jeu, genreun jet de constitution(Athletisme) pour de l'endurance\n(oui ou non)\n")
+        match rule:
+            case "oui":
+                comp_rule = True
+                return comp_rule
+            case "non":
+                comp_rule = False
+                return comp_rule
             case other:
                 x += 1

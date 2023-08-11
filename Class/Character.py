@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_int, comp_sag, type_list, Regen_rule
+from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_int, comp_sag, type_list, Regen_rule, Comp_rule, comp_dex, comp_cha
 from equipment.Equipment import Weapon, Armor
 
 
@@ -36,11 +36,16 @@ class Character:
                     "unconscious": False, 
                     "invisible": False, 
                     "paralyzed": False, 
-                    "petrified": False}
+                    "petrified": False,
+                    "Dead": False,
+                    "JdS death": None,
+                    "JdS life": None}
+        self.Abri = 0
         self.charm_list = [self.name]
         self.fright_list = [self.name]
         self.disease = []
         self.inventory = []
+        self.deaded = False
         # action modifier
         self.Modifier = 0
         self.Dodge = 0
@@ -78,6 +83,8 @@ class Character:
         self.attack_weapon = None
         self.right_arm = None
         self.Nat_weapon = None
+        self.Nat_dgt_type = "contendant"
+        self.Nat_dgt = self.mod_For + 1
         # Armor
         self.equiped_armor = None
         # Backpack
@@ -92,6 +99,7 @@ class Character:
         PV_roll()
         self.finesse_dex = finesse_rule()
         self.regen_pv = Regen_rule()
+        self.comp_rule = Comp_rule()
         self.PV_lvl = 0
         for lvls in range(self.lvl-1):# gain HP par lvl + save []
             self.PV_lvl += PV_rule(10) + self.mod_Con
@@ -127,28 +135,8 @@ class Character:
         self.prof_armor = None
         self.prof_tool = None
 
-        # initiative
-        self.initiative = self.mod_Dex
         # Competence
-        self.Acrobaties = self.mod_Dex # (DEX)
-        self.Arcanes = self.mod_Int # (INT)
-        self.Athletisme = self.mod_For # (FOR)
-        self.Discretion = self.mod_Dex # (DEX)
-        self.Dressage = self.mod_Wis # (SAG)
-        self.Escamotage = self.mod_Dex # (DEX)
-        self.Histoire = self.mod_Int # (INT)
-        self.Intimidation = self.mod_Cha # (CHA)
-        self.Intuition = self.mod_Wis # (SAG)
-        self.Investigation = self.mod_Int # (INT)
-        self.Medecine = self.mod_Wis # (SAG)
-        self.Nature = self.mod_Int # (INT)
-        self.Perception = self.mod_Wis # (SAG)
-        self.Perspicacite = self.mod_Wis # (SAG)
-        self.Persuasion = self.mod_Cha # (CHA)
-        self.Religion = self.mod_Int # (INT)
-        self.Representation = self.mod_Cha # (CHA)
-        self.Survie = self.mod_Wis # (SAG)
-        self.Tromperie = self.mod_Cha # (CHA)
+        self.comp_prof = []
         # Competence passive
         self.Sag_Perception_Pass = 10+self.Perception
         self.Sag_Intuition_Pass = 10+self.Intuition
@@ -156,152 +144,62 @@ class Character:
         self.jds = [self.mod_For, self.mod_Dex, self.mod_Con, self.mod_Int, self.mod_Wis, self.mod_Cha]
 
     # Jet de Caracteristique
-    def jet_For(self, modifier=0,competence=""):
+    def Jet(self, modifier=0,competence="", target=None):
+        global comp_int, comp_sag, comp_dex, comp_cha
         modifier += self.Help
-        modifier += self.encombrement
         modifier += self.debuff_epuisement
         if self.etat["poisoned"]:
             modifier -= 1
         if self.etat["frightened_name"]: # charm limit
-                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-                if x == "oui": # si personne effrayante champ de vision
-                    modifier -= 1
+                y = 1
+                for i in range(y):
+                    x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+                    if x == "oui": # si personne effrayante champ de vision
+                        modifier -= 1
+                    else:
+                        y +=1
         jet = d20(modifier)# jet de de
         print(f"Jet brut : {jet[0]}")
         self.Help = 0  # reset de Help
+        y = 1
+        list = ["For", "Dex", "Int", "Sag", "Cha"]
+        for i in range(y):
+            dice = input("Qu'elle genre de jet voulez vous faire ?\nFor, Dex, Int, Sag, Cha\n")
+            if dice not in list:
+                y+=1
+        yy = 1
+        match dice:
+            case "For":
+                dice = self.mod_For
+                modifier += self.encombrement
+                list = "Athletisme"
+            case "Dex":
+                dice = self.mod_Dex
+                modifier += self.encombrement
+                list = comp_dex
+            case "Con":
+                dice = self.mod_Con
+                modifier += self.encombrement
+            case "Int":
+                dice = self.mod_Int
+                list = comp_int
+            case "Sag":
+                dice = self.mod_Wis
+                list = comp_sag
+            case "Cha":
+                dice = self.mod_Cha
+                if target in self.charm_list:
+                    modifier += 1
+
+        for i in range(yy):
+            if self.comp_rule:
+                competence = input(f"Es que vous voulez utilisez une compétence particulière ?\nLa liste:\nAthletisme,\n{comp_dex}\n{comp_int}\n{comp_sag}\n{comp_cha}\n(Sinon non)\n")
+            else:
+                competence = input(f"Es que vous voulez utilisez une compétence ?\n{list}\n(Sinon non)\n")
+
         if competence != "":# si comp bonus comp
-            jet += competence
-            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
-            return jet
-        else:# sinon simple jet for
-            jet += self.mod_For
-            print(f"Votre modificateur de force : {self.mod_For}\nJet final : {jet}")
-            return jet
-    
-    def jet_Dex(self, modifier=0,competence=""):
-        if self.Dodge <= 1: # si dodge action
-            modifier += self.Dodge
-            self.Dodge = 0
-        modifier += self.Help
-        modifier += self.debuff_epuisement
-        modifier += self.encombrement
-        if self.etat["poisoned"]:
-            modifier -= 1
-        if self.etat["frightened_name"]: # charm limit
-                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-                if x == "oui": # si personne effrayante champ de vision
-                    modifier -= 1
-        jet = d20(modifier)
-        print(f"Jet brut : {jet[0]}")
-        self.Help = 0  # reset de Help
-        if competence != "":
-            jet += competence
-            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
-            return jet
-        else:
-            jet += self.mod_Dex
-            print(f"Votre modificateur de dextérité : {self.mod_Dex}\nJet final : {jet}")
-            return jet
-
-    def jet_Con(self, modifier=0,competence=""):
-        modifier += self.Help
-        modifier += self.debuff_epuisement
-        modifier += self.encombrement
-        if self.etat["poisoned"]:
-            modifier -= 1
-        if self.etat["frightened_name"]: # charm limit
-                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-                if x == "oui": # si personne effrayante champ de vision
-                    modifier -= 1
-        jet = d20(modifier)
-        print(f"Jet brut : {jet[0]}")
-        self.Help = 0  # reset de Help
-        if competence != "":
-            jet += competence
-            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
-            return jet
-        else:
-            jet += self.mod_Con
-            print(f"Votre modificateur de constitution : {self.mod_Con}\nJet final : {jet}")
-            return jet
-    
-    def jet_Int(self, modifier=0,competence=""):
-        modifier += self.Help
-        modifier += self.debuff_epuisement
-        if self.etat["poisoned"]:
-            modifier -= 1
-        if self.etat["frightened_name"]: # charm limit
-                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-                if x == "oui": # si personne effrayante champ de vision
-                    modifier -= 1
-        jet = d20(modifier)
-        print(f"Jet brut : {jet[0]}")
-        self.Help = 0  # reset de Help
-        if competence != "":
-            jet += competence
-            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
-            return jet
-        else:
-            jet += self.mod_Int
-            print(f"Votre modificateur de intélligence : {self.mod_Int}\nJet final : {jet}")
-            return jet
-
-    def jet_Wis(self, modifier=0,competence=""):
-        modifier += self.Help
-        modifier += self.debuff_epuisement
-        if self.etat["poisoned"]:
-            modifier -= 1
-        if self.etat["frightened_name"]: # charm limit
-                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-                if x == "oui": # si personne effrayante champ de vision
-                    modifier -= 1
-        jet = d20(modifier)
-        print(f"Jet brut : {jet[0]}")
-        self.Help = 0  # reset de Help
-        if competence != "":
-            jet += competence
-            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
-            return jet
-        else:
-            jet += self.mod_Wis
-            print(f"Votre modificateur de Sagesse : {self.mod_Wis}\nJet final : {jet}")
-            return jet
-
-    def jet_Cha(self, modifier=0,competence="", target=None):
-        modifier += self.Help
-        modifier += self.debuff_epuisement
-        if self.etat["poisoned"]:
-            modifier -= 1
-        if target in self.charm_list:
-            modifier += 1
-        if self.etat["frightened_name"]: # charm limit
-            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-            if x == "oui": # si personne effrayante champ de vision
-                modifier -= 1
-        jet = d20(modifier)
-        print(f"Jet brut : {jet[0]}")
-        self.Help = 0  # reset de Help
-        if competence != "":
-            jet += competence
-            print(f"Le bonus de votre compétence : {competence}\nJet final : {jet}")
-            return jet
-        else:
-            jet += self.mod_Cha
-            print(f"Votre modificateur de charisme : {self.mod_Cha}\nJet final : {jet}")
-            return jet
-    
-    def jet_initiative(self, modifier=0):
-        modifier += self.Help
-        modifier += self.debuff_epuisement
-        if self.etat["poisoned"]:
-            modifier -= 1
-        if self.etat["frightened_name"]: # charm limit
-            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-            if x == "oui": # si personne effrayante champ de vision
-                modifier -= 1
-        jet = d20(modifier)
-        print(f"Jet brut : {jet[0]}\n Votre initiative : {self.initiative}")
-        jet += self.initiative
+            if competence in self.comp_prof:
+                jet += self.proficiency
         print(f"Jet final : {jet}")
         return jet
 
@@ -394,42 +292,30 @@ class Character:
             6: (-1, 0, 2, True),
         }
 
-        # Verifier si l'epuisement a change depuis la derniere fois
-        if self.epuisement != self.epuisement_prec:
-            # Recuperer les effets associes a l'epuisement actuel
-            effect = epuisement_effects.get(self.epuisement, None)
-            if effect:
-                debuff, speed_modifier, malus_hp, death = effect
 
-                # Annuler les malus/debuffs de l'epuisement precedent
-                """if self.epuisement_prec in epuisement_effects:
-                    prev_effect = epuisement_effects[self.epuisement_prec]
-                    prev_debuff, prev_speed_modifier, prev_malus_hp, prev_death = prev_effect
-                    self.debuff_epuisement -= prev_debuff
-                    if prev_speed_modifier is not None:
-                        self.Speed = prev_speed_modifier"""
-
-                # Appliquer les malus/debuffs de l'epuisement actuel
-                self.debuff_epuisement = debuff
-                if speed_modifier == 0:
-                    self.Speed = 0
-                elif speed_modifier == -1:
-                    self.Speed = self.Speed_base
-                else:
-                    self.Speed /= speed_modifier
-                if malus_hp == 2:
-                    self.PV_Max /= malus_hp
-                    self.check_hp()
-                else:
-                    self.PV_Max *= malus_hp
-                    self.check_hp()
-                if death:
-                    self.PV_tot -= self.PV_Max *2
-                else:
-                    self.PV_tot += self.PV_Max *2
+        # Recuperer les effets associes a l'epuisement actuel
+        effect = epuisement_effects.get(self.epuisement, None)
+        if effect:
+            debuff, speed_modifier, malus_hp, death = effect
+            # Appliquer les malus/debuffs de l'epuisement actuel
+            self.debuff_epuisement = debuff
+            if speed_modifier == 0:
+                self.Speed = 0
+            elif speed_modifier == -1:
+                self.Speed = self.Speed_base
+            else:
+                self.Speed /= speed_modifier
+            if malus_hp == 2:
+                self.PV_Max /= malus_hp
+                self.check_hp()
+            else:
+                self.PV_Max *= malus_hp
+                self.check_hp()
+            if death:
+                self.PV_tot -= self.PV_Max *2
+            else:
+                self.PV_tot += self.PV_Max *2
                     
-            # Mettre a jour l'epuisement precedent
-            self.epuisement_proc = self.epuisement
 
     
     # rest
@@ -569,7 +455,7 @@ class Character:
     # Etat
     def Prone(self, target=None, desapply=False):
         if target == None:
-                target = self
+            target = self
         etat = target.get_etat()
         if desapply:
             etat["prone"] = False
@@ -614,7 +500,7 @@ class Character:
 
     def Blinded(self, target=None, desapply=False):
         if target == None:
-                target = self
+            target = self
         target_etat = target.get_etat()
         if desapply:
             target_etat["blinded"] = False
@@ -660,7 +546,7 @@ class Character:
 
     def Poisoned(self, target=None, desapply=False):
         if target == None:
-                target = self
+            target = self
         target_etat = target.get_etat()
         if desapply:
             target_etat["poisoned"] = False
@@ -672,7 +558,7 @@ class Character:
 
     def Restrained(self, target=None, desapply = False):
         if target == None:
-                target = self
+            target = self
         target_etat = target.get_etat()
         if desapply:
             target_etat["restrained"] = False
@@ -686,7 +572,7 @@ class Character:
 
     def Incapacited(self, target=None, desapply=False):
         if target == None:
-                target = self
+            target = self
         target_etat = target.get_etat()
         if desapply:
             target_etat["incapacited"] = False
@@ -700,7 +586,7 @@ class Character:
 
     def Stunned(self, target=None, desapply=False):
         if target == None:
-                target = self
+            target = self
         target_etat = target.get_etat()
         if desapply:
             target_etat["stunned"] = False
@@ -714,7 +600,7 @@ class Character:
     def Unconscious(self, target=None, desapply=False):
         ground = []
         if target == None:
-                target = self
+            target = self
         target_etat = target.get_etat()
         if desapply:
             target_etat["unconscious"] = False
@@ -734,7 +620,7 @@ class Character:
 
     def Invisible(self, target=None, desapply=False):
         if target == None:
-                target = self
+            target = self
         target_etat = target.get_etat()
         if desapply:
             target_etat["invisible"] = False
@@ -760,7 +646,7 @@ class Character:
 
     def Petrified(self, target=None, desapply=False):
         if target == None:
-                target = self
+            target = self
         target_etat = target.get_etat()
         if desapply:
             target_etat["petrified"] = False
@@ -777,82 +663,151 @@ class Character:
             target.Imun.append("poison")
             # no effect disease
 
+
+    def Death(self, target=None, stabelised=False):
+        instant = False
+        if target == None:
+            target = self
+        target_etat = target.get_etat()
+        if target.PV_tot == 0-target.PV_Max:
+            instant = True
+        if stabelised:
+            target.Unconscious(None, True)
+            target.PV_tot = 1
+            print(f"{target.name} est stabilisé !")
+            self.deaded = False
+            self.etat["JdS death"] = None
+            self.etat["JdS life"] = None
+        elif instant:
+            target_etat["Dead"] = True
+            print(f"{target.name} est MORT Instantanement !!")
+            print("...System32 succesfully deleted")
+        elif target.PV_tot <= 0:
+            target_etat["JdS death"] = 0
+            target_etat["JdS life"] = 0
+            target.Unconscious()
+            target.deaded = True
+            print("il faut aller la sauvé !!")
+
+        
+    def JdS_death(self):
+        global d20
+        if self.etat["JdS death"] >= 3:
+            self.etat["Dead"] = True
+            print(f"{self.name} est MORT !!")
+            return
+        elif self.etat["JdS life"] >= 3 or self.PV_tot > 0 and self.deaded:
+            self.etat["life"] = True
+            print(f"{self.name} c'est réveiller !!")
+            self.Unconscious(None, True)
+            self.deaded = False
+            self.etat["JdS death"] = None
+            self.etat["JdS life"] = None
+
+        elif self.etat["JdS death"] >= 0:
+            Life = self.etat["JdS life"]
+            Death = self.etat["JdS death"]
+            print("Vous ne pouvez pas jouer, faisont vos jet contre la MORT !!")
+            print("ROLL OR REROLL")
+            jet = d20()
+            print(f"Le resultat du jet contre la mort de {self.name} est de {jet}")
+            if jet >= 10:
+                self.etat["JdS life"] += 1
+                print(f"Tu as réussi ton jet ! Tu t'éloignes de la mort")
+            elif jet < 10:
+                self.etat["JdS death"] += 1
+                print("Tu as louper ton jet ! Tu te rapproches de la mort")
+            elif jet == 1:
+                self.etat["JdS "] += 2
+                print(f"C'est désastreux ! Tu te rapproche dangereusement de la mort")
+            elif jet == 20:
+                self.etat["JdS "] += 2
+                print(f"C'est Miraculeux ! Tu t'éloignes miraculeusement de la mort")
+            print(f"Jet contre la mort est réussi : {Life}\nJet contre la mort louper {Death}")
+            return
+
+
     # Menu
     def Menu(self):
-        if not self.etat["lutte"]:
-            Action = input(f"C'est à votre tour, vous avez [{self.Player_Action}] Action\n 1°) Attaquer\n 2°) Aider\n 3°) Rechercher\n 4°) Esquiver\n 5°) Se Cacher\n 6°) Se préparer\n 7°) Prise de lutte\n 8°) Passer son tour\n 9°) Un jet de dé banal\n 10°) Regarder son inventaire\n")
-            match Action:
-                case "1": # Attack
-                    Player_party = listing().Player_party
-                    target = input(f"Qui que vous ciblez\n Les personnages actuel en combat sont: {Player_party}\n")
-                    weapon = input(f"Avec qu'elle arme voulez vous tapez ?\n Bras Gauche: {self.left_arm}\n Bras droit: {self.right_arm}")
-                    modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?")
-                    match modifier:
-                        case "D":
-                            modifier = -1
-                            return modifier
-                        case "A":
-                            modifier = 1
-                            return modifier
-                        case other:
-                            modifier = 0
-                            return modifier
-                    return self.attack_action(target, weapon, modifier)
-                case "2": # Help
-                    target = input(f"Qui que vous ciblez\n Les personnages actuel en combat sont: {Player_party}\n")
-                    return self.help_action(target)
-                case "3": # Search
-                    modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
-                    comp = input(f"Qu'elles compétences voulez vous utilisez pour se jet de recherche ?\n Liste des compétences lié à l'intelligence ou à la Sagesse: {comp_int, comp_sag}\n")
-                    match comp:
-                        case "Arcane":
-                            comp = self.Arcanes
-                            return comp
-                        case "Histoire":
-                            comp = self.Histoire
-                            return comp
-                        case "Investigation":
-                            comp = self.Investigation
-                            return comp
-                        case "Nature":
-                            comp = self.Nature
-                            return comp
-                        case "Religion":
-                            comp = self.Religion
-                            return comp
-                        case "Dressage":
-                            comp = self.Dressage
-                            return comp
-                        case "Intuition":
-                            comp = self.Intuition
-                            return comp
-                        case "Medecine":
-                            comp = self.Medecine
-                            return comp
-                        case "Perception":
-                            comp =  self.Perception
-                            return comp
-                        case "Perspicacité":
-                            comp = self.Perspicacite
-                            return comp
-                        case "Survie":
-                            comp = self.Survie
-                            return comp
-                    return self.search_action(modifier, comp)
-                case "4": # Esquive
-                    return
-                case "5": # Hide
-                    return
-                case "6": # Ready
-                    return
-                case "7": # Lutte
-                    return
-                case "8": # Pass
-                    return
-                case "9": # jet de dé
-                    return
-                case "10": # show inventory
-                    return
+        self.JdS_death()
+        turn = 1
+        for i in range(turn):
+            if not self.etat["lutte"]:
+                Action = input(f"C'est à votre tour, vous avez [{self.Player_Action}] Action\n 1°) Attaquer\n 2°) Aider\n 3°) Rechercher\n 4°) Esquiver\n 5°) Se Cacher\n 6°) Se préparer\n 7°) Prise de lutte\n 8°) Passer son tour\n 9°) Un jet de dé banal\n 10°) Regarder son inventaire\n")
+                match Action:
+                    case "1": # Attack
+                        Player_party = listing().Player_party
+                        target = input(f"Qui que vous ciblez\n Les personnages actuel en combat sont: {Player_party}\n")
+                        weapon = input(f"Avec qu'elle arme voulez vous tapez ?\n Bras Gauche: {self.left_arm}\n Bras droit: {self.right_arm}")
+                        modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?")
+                        match modifier:
+                            case "D":
+                                modifier = -1
+                                return modifier
+                            case "A":
+                                modifier = 1
+                                return modifier
+                            case other:
+                                modifier = 0
+                                return modifier
+                        return self.attack_action(target, weapon, modifier)
+                    case "2": # Help
+                        target = input(f"Qui que vous ciblez\n Les personnages actuel en combat sont: {Player_party}\n")
+                        return self.help_action(target)
+                    case "3": # Search
+                        modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
+                        comp = input(f"Qu'elles compétences voulez vous utilisez pour se jet de recherche ?\n Liste des compétences lié à l'intelligence ou à la Sagesse: {comp_int, comp_sag}\n")
+                        match comp:
+                            case "Arcane":
+                                comp = self.Arcanes
+                                return comp
+                            case "Histoire":
+                                comp = self.Histoire
+                                return comp
+                            case "Investigation":
+                                comp = self.Investigation
+                                return comp
+                            case "Nature":
+                                comp = self.Nature
+                                return comp
+                            case "Religion":
+                                comp = self.Religion
+                                return comp
+                            case "Dressage":
+                                comp = self.Dressage
+                                return comp
+                            case "Intuition":
+                                comp = self.Intuition
+                                return comp
+                            case "Medecine":
+                                comp = self.Medecine
+                                return comp
+                            case "Perception":
+                                comp =  self.Perception
+                                return comp
+                            case "Perspicacité":
+                                comp = self.Perspicacite
+                                return comp
+                            case "Survie":
+                                comp = self.Survie
+                                return comp
+                        return self.search_action(modifier, comp)
+                    case "4": # Esquive
+                        return
+                    case "5": # Hide
+                        return
+                    case "6": # Ready
+                        return
+                    case "7": # Lutte
+                        return
+                    case "8": # Pass
+                        return
+                    case "9": # jet de dé
+                        return
+                    case "10": # show inventory
+                        return
+                    case other:
+                        turn += 1
 
 
     def Modifier(self, modifier, arme,  target):
@@ -872,9 +827,13 @@ class Character:
             print("vous ne pouvez pas attaquez ce bogoss")
             return
         if target_etat["frightened_name"]: # charm limit
-            x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
-            if x == "oui": # si personne effrayante champ de vision
-                modifier -= 1
+            y = 1
+            for i in range(y):
+                x = input("Es que la personne qui vous effrez est dans votre champs de vision ? (oui ou non)\n")
+                if x == "oui": # si personne effrayante champ de vision
+                    modifier -= 1
+                else:
+                    y +=1
         if self.etat["blinded"]: # desavantage aveugle
             modifier -= 1
         if target_etat["blinded"]: # si cible est aveugle
@@ -906,9 +865,6 @@ class Character:
         self.Player_Action -= 1
         self.Player_Action_Bonus -= 1
 
-    def dgt_nat_weapon(self):
-        self.PV_tot -= self.mod_For + 1
-        dgt_type = "contendant"
 
     def damage(self, arme, bonus=0, crit=1):
         if arme != self.Nat_weapon:
@@ -919,8 +875,19 @@ class Character:
                 dmg = 0
             if arme.get_dgt_type() in self.Vul:
                 dmg *= 2
+            if self.etat["JdS death"] >= 0:
+                self.etat["JdS death"] += 1
+                print("Votre état s'aggrave")
+                return
             print("Vous avez fait ", dmg, "de dégats à ", self.name)
-            self.PV_tot -= dmg
+            self.PV_tot -= dmg-self.PV_Temp
+            self.PV_Temp -= dmg
+        else:
+            dmg = self.Nat_dgt*crit
+            print("Vous avez fait ", dmg, "de dégats à ", self.name)
+            self.PV_tot -= dmg-self.PV_Temp
+            self.PV_Temp -= dmg
+
 
     def attack_action(self, target, arme, modifier=0):
         bonus = self.mod_For
@@ -966,7 +933,7 @@ class Character:
                     print(f"Votre jet d'attaque = {jet_attack}")
                 if jet_attack >= target.get_class_armor():  # si jet > CA
                     print("Vous avez réussi a touché !")
-                    if arme == self.Nat_weapon and self.Nat_weapon == None:  # et si Nat_weapon used & = None
+                    if arme == self.Nat_weapon:  # et si Nat_weapon used 
                         target.damage(self.Nat_weapon, 0, crit)  # PV target - mod.For
                     else:
                         target.damage(arme, bonus_dgt, crit)
