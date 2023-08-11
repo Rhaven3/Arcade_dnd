@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_int, comp_sag, type_list, Regen_rule, Comp_rule, comp_dex, comp_cha
+from data.Data import PV_rule, PV_roll, d20, d6, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_int, comp_sag, type_list, Regen_rule, Comp_rule, comp_dex, comp_cha
 from equipment.Equipment import Weapon, Armor
 
 
@@ -39,7 +39,8 @@ class Character:
                     "petrified": False,
                     "Dead": False,
                     "JdS death": None,
-                    "JdS life": None}
+                    "JdS life": None,
+                    "noir": False}
         self.Abri = 0
         self.charm_list = [self.name]
         self.fright_list = [self.name]
@@ -51,6 +52,7 @@ class Character:
         self.Dodge = 0
         self.Help = 0
         self.lourd = 0
+        self.lum = 0
 
         # Details
         self.historique = historique
@@ -148,6 +150,7 @@ class Character:
         global comp_int, comp_sag, comp_dex, comp_cha
         modifier += self.Help
         modifier += self.debuff_epuisement
+        
         if self.etat["poisoned"]:
             modifier -= 1
         if self.etat["frightened_name"]: # charm limit
@@ -158,7 +161,6 @@ class Character:
                         modifier -= 1
                     else:
                         y +=1
-        jet = d20(modifier)# jet de de
         print(f"Jet brut : {jet[0]}")
         self.Help = 0  # reset de Help
         y = 1
@@ -196,10 +198,16 @@ class Character:
                 competence = input(f"Es que vous voulez utilisez une compétence particulière ?\nLa liste:\nAthletisme,\n{comp_dex}\n{comp_int}\n{comp_sag}\n{comp_cha}\n(Sinon non)\n")
             else:
                 competence = input(f"Es que vous voulez utilisez une compétence ?\n{list}\n(Sinon non)\n")
-
-        if competence != "":# si comp bonus comp
-            if competence in self.comp_prof:
-                jet += self.proficiency
+        if self.lum == -1 and competence == "Perception":
+            modifier -= 1
+        if self.etat["noir"] and competence == "Perception":
+            print("vous ne voyez rien, il fait tout noir")
+            return
+        if self.etat["blinded"]:
+            print("Vous êtes toujours aveugler pour prévenir")
+        jet = d20(modifier)# jet de de
+        if competence != "" and competence in self.comp_prof:# si comp bonus comp
+            jet += self.proficiency
         print(f"Jet final : {jet}")
         return jet
 
@@ -258,16 +266,18 @@ class Character:
     def Encombrement(self):
         if self.Charge > 2.5 * self.attributes[0]:
             self.Speed -= 3
+            print("Vous ête légèrement encombré")
         elif self.Charge > 5 * self.attributes[0]:
             self.Speed -= 6
             self.encombrement -= 1
+            print("Vous ête moyennement encombré")
         elif self.Charge >= self.CC:
             self.Speed = 0
             self.encombrement -= 1
+            print("Vous ête fortement encombré")
         else:
             self.Speed = self.Speed_base
             self.encombrement = 0
-
 
 
     # Check HP
@@ -292,7 +302,7 @@ class Character:
             6: (-1, 0, 2, True),
         }
 
-
+        print(f"vous êtes au {self.epuisement} niveau d'épuisement")
         # Recuperer les effets associes a l'epuisement actuel
         effect = epuisement_effects.get(self.epuisement, None)
         if effect:
@@ -378,6 +388,29 @@ class Character:
 
     # Distance
     # a voir
+
+    # Environnement
+    def chute(self, hauteur):
+        global d6
+        hauteur = math.floor(hauteur/3)
+        if hauteur > 20:
+            hauteur = 20
+        dmg = d6(0, hauteur)[0]
+        dmg_type = "contendant"
+        print(f"Ehhhh c'est la chute ! pour {self.name}")
+        self.damage(dmg, dmg_type)
+
+    def vision(self, lum):
+        match lum:
+            case "normale":
+                self.lum = 0
+                self.etat["noir"] = False
+            case "faible":
+                self.lum = -1
+                self.etat["noir"] = False
+            case "nulle":
+                self.lum = -1
+                self.etat["noir"] = True
 
 
     # get stats principal
@@ -866,8 +899,8 @@ class Character:
         self.Player_Action_Bonus -= 1
 
 
-    def damage(self, arme, bonus=0, crit=1):
-        if arme != self.Nat_weapon:
+    def damage(self, arme, Type=None, bonus=0, crit=1):
+        if isinstance(arme, Weapon):
             dmg = (arme.get_Dgt() + bonus)*crit
             if arme.get_dgt_type() in self.Res:
                 dmg /= 2
@@ -879,12 +912,35 @@ class Character:
                 self.etat["JdS death"] += 1
                 print("Votre état s'aggrave")
                 return
-            print("Vous avez fait ", dmg, "de dégats à ", self.name)
+            print(f"{self.name} à pris {dmg} dégats")
+            self.PV_tot -= dmg-self.PV_Temp
+            self.PV_Temp -= dmg
+        elif arme == self.Nat_weapon:
+            dmg = self.Nat_dgt*crit
+            if self.Nat_dgt_type in self.Res:
+                dmg /= 2
+            if self.Nat_dgt_type in self.Imun:
+                dmg = 0
+            if self.Nat_dgt_type in self.Vul:
+                dmg *= 2
+            if self.etat["JdS death"] >= 0:
+                self.etat["JdS death"] += 1
+                return
+            print(f"{self.name} à pris {dmg} dégats")
             self.PV_tot -= dmg-self.PV_Temp
             self.PV_Temp -= dmg
         else:
-            dmg = self.Nat_dgt*crit
-            print("Vous avez fait ", dmg, "de dégats à ", self.name)
+            dmg = self.arme*crit
+            if Type in self.Res:
+                dmg /= 2
+            if Type in self.Imun:
+                dmg = 0
+            if Type in self.Vul:
+                dmg *= 2
+            if self.etat["JdS death"] >= 0:
+                self.etat["JdS death"] += 1
+                return
+            print(f"{self.name} à pris {dmg} dégats")
             self.PV_tot -= dmg-self.PV_Temp
             self.PV_Temp -= dmg
 
