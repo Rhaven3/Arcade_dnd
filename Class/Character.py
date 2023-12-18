@@ -872,22 +872,49 @@ class Character:
                             return comp
                     return self.search_action(modifier, comp)
                 case "4": # Esquive
-                    print("Vous êtes prêt à esquiver !!")
+                    print("Vous êtes prêt à esquiver !!\n")
                     return self.dodge_action()
                 case "5": # Hide
                     modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
                     return self.hide_action(modifier)
                 case "6": # Ready
-                    print("")
-                    return
+                    print("Vous vous tenez prêt à faire un truc pendant votre Réaction\n")
+                    return self.ready_action()
                 case "7": # Lutte
-                    return
+                    Player_party = listing().Player_party
+                    target = input(f"qui que vous voulez attaquer ? {Player_party}\n")
+                    modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
+                    return self.lutte(target, modifier)
                 case "8": # Pass
-                    return
+                    print("vous venez de passer votre tour\n")
+                    return self.pass_tour()
                 case "9": # jet de dé
-                    return
+                    stat = input("Qu'elles  stats ? For / Dex / Con / Int / Wis / Cha\n")
+                    modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
+                    match stat:
+                        case "For":
+                            self.Player_Action -= 1
+                            return self.jet_For(modifier)
+                        case "Dex":
+                            self.Player_Action -= 1
+                            return self.jet_Dex(modifier)
+                        case "Con":
+                            self.Player_Action -= 1
+                            return self.jet_Con(modifier)
+                        case "Int":
+                            self.Player_Action -= 1
+                            return self.jet_Int(modifier)
+                        case "Wis":
+                            self.Player_Action -= 1
+                            return self.jet_Wis(modifier)
+                        case "Cha":
+                            self.Player_Action -= 1
+                            return self.jet_Cha(modifier)
+                        case other:
+                            print("va te faire foutre recommence\n")
+                            return self.Menu()
                 case "10": # show inventory
-                    return
+                    return self.show_inventory()
 
 
     def Modifier(self, modifier, arme,  target):
@@ -1093,7 +1120,7 @@ class Character:
                     target.damage(arme)
                 self.Player_Action_Bonus -= cost
 
-    def contre_lutte(self, modifier=0):
+    def contre_lutte(self, modifier=""):
         x=1
         for i in range(x):
             contre_lutte = input("Voulez vous faire un jet d'Athlétisme ou un jet d'Acrobaties pour résister à la lutte ? \n 1°) jet d'Athlétisme \n 2°) jet d'Acrobaties \n 3°) Ne rien faire\n")
@@ -1114,7 +1141,7 @@ class Character:
                     x += 1
                     print("vous avez fait une erreur !")
             
-    def lutte(self, target=None, modifier=0):
+    def lutte(self, target=None, modifier=""):
         x=1
         Player_party = listing().Player_party
         if target is None:
