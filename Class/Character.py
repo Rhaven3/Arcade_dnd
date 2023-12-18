@@ -878,7 +878,7 @@ class Character:
                     modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
                     return self.hide_action(modifier)
                 case "6": # Ready
-                    
+                    print("")
                     return
                 case "7": # Lutte
                     return
