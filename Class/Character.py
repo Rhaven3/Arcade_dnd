@@ -835,7 +835,7 @@ class Character:
                     return self.help_action(target)
                 case "3": # Search
                     modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
-                    comp = input(f"Qu'elles compétences voulez vous utilisez pour se jet de recherche ?\n Liste des compétences lié à l'intelligence ou à la Sagesse: {comp_int, comp_sag}\n")
+                    comp = input(f"Qu'elles compétences voulez vous utilisez pour ce jet de recherche ?\n Liste des compétences lié à l'intelligence ou à la Sagesse: {comp_int, comp_sag}\n")
                     match comp:
                         case "Arcane":
                             comp = self.Arcanes
@@ -872,10 +872,13 @@ class Character:
                             return comp
                     return self.search_action(modifier, comp)
                 case "4": # Esquive
-                    return
+                    print("Vous êtes prêt à esquiver !!")
+                    return self.dodge_action()
                 case "5": # Hide
-                    return
+                    modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
+                    return self.hide_action(modifier)
                 case "6": # Ready
+                    
                     return
                 case "7": # Lutte
                     return
@@ -1039,7 +1042,7 @@ class Character:
 
     # Dash
 
-    def hide_action(self, modifier=0):
+    def hide_action(self, modifier=""):
         if self.Player_Action > 0:
             jet = d20(modifier) + self.Discretion
             print(jet)
