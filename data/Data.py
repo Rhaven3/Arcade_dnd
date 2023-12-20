@@ -271,6 +271,7 @@ etherum_currency = Currency("Pièce d'Etherum", "pe", 200, ["pe", "pp", "po", "p
 # taille list
 taille_list = ["TP", "P", "M", "G", "TG", "Gig"]
 # Compétence Int
+comp_list = ["Acrobaties", "Arcanes", "Athletisme", "Discretion", "Dressage", "Escamotage", "Histoire", "Intimidation", "Intuition", "Investigation", "Medecine", "Nature", "Perception", "Perspicacite", "Persuasion", "Religion", "Representation", "Survie", "Tromperie"]
 comp_int = ["Arcane", "Histoire", "Investigation", "Nature", "Religion"]
 comp_sag = ["Dressage", "Intuition", "Medecine", "Perception", "Perspicacité", "Survie"]
 # type list

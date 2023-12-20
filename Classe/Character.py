@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_int, comp_sag, type_list, Regen_rule
+from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_list, comp_int, comp_sag, type_list, Regen_rule
 from equipment.Equipment import Weapon, Armor
 
 
@@ -826,7 +826,7 @@ class Character:
                         case "A":
                             modifier = 1
                             return modifier
-                        case other:
+                        case _:
                             modifier = 0
                             return modifier
                     return self.attack_action(target, weapon, modifier)
@@ -891,6 +891,15 @@ class Character:
                 case "9": # jet de dé
                     stat = input("Qu'elles  stats ? For / Dex / Con / Int / Wis / Cha\n")
                     modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
+                    comp = input(f"Qu'elles compétences voulez vous utilisez pour ce jet ?\n Liste des compétences: {comp_int, comp_sag}\n")
+                    match comp:
+                        case "Acrobaties":
+                            comp = self.Acrobaties
+                            return comp
+                        case other:
+                            print("va te faire foutre recommence\n")
+                            return self.Menu()
+                    
                     match stat:
                         case "For":
                             self.Player_Action -= 1

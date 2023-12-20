@@ -2,7 +2,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 # from Class.Fighter import Fighter
-from Class.Character import *
+from Classe.Character import *
 # name / lvl / historique / race / age / taille / yeux / peau / cheveux / poids / For / Dex / Con / Int / Wis / Cha
 test = Character("Test", 5, "", "", "", "P", "", "", "", 60000, 15, 14, 12, 10, 12, 14)
 """print("DV: ", test.get_DV())
