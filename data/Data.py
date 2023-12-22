@@ -181,17 +181,17 @@ def d4(modifier=0, x=1):
 def d(d, modifier=0,  nb=1):
     match d:
         case 4:
-            return d4(modifier, nb)
+            return d4(modifier, nb)[0]
         case 6:
-            return d6(modifier, nb)
+            return d6(modifier, nb)[0]
         case 8:
-            return d8(modifier, nb)
+            return d8(modifier, nb)[0]
         case 10:
-            return d10(modifier, nb)
+            return d10(modifier, nb)[0]
         case 12:
-            return d12(modifier, nb)
+            return d12(modifier, nb)[0]
         case 20:
-            return d20(modifier, nb)
+            return d20(modifier, nb)[0]
         case other:
             return 0
 
