@@ -1,8 +1,4 @@
 import math, random
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 
 from data.Data import PV_rule, PV_roll, d20, finesse_rule, Action, Action_bonus, Reaction, taille_list, listing, comp_list, comp_int, comp_sag, type_list, Regen_rule
 from equipment.Equipment import Weapon, Armor

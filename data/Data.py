@@ -414,7 +414,7 @@ def PV_roll():
                 PV_Roll = False
             case other:
                 x += 1
-def PV_rule(d1, modifier="", lvl=1):
+def PV_rule(d1, modifier=0, lvl=1):
     match PV_Roll:
         case True:
             return d(d1, modifier,  lvl)

@@ -1,6 +1,3 @@
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from Equipment import Weapon
 from data.Data import d10, d12, d4, d6, d8, platinium, gold, etherum, copper, silver
 # dgt dé / nb / modifier
