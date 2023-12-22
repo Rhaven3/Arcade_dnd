@@ -90,9 +90,9 @@ class Character:
         self.regen_pv = Regen_rule()
         self.PV_lvl = 0
         for lvls in range(self.lvl-1):# gain HP par lvl + save []
-            PV_rule(10)
+            PV_rule(10)[0]
             print("pvrule : ", type(PV_rule(10)))
-            self.PV_lvl += PV_rule(10) + self.mod_Con
+            self.PV_lvl += PV_rule(10)[0] + self.mod_Con
             self.get_lvl_up().append(self.PV_lvl)
         self.PV_tot = self.PV_base + self.PV_lvl
         self.check_pv_tot = False
