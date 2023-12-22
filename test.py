@@ -17,4 +17,8 @@ for i in test.get_lvl_up():
 print("PV lvl: ", test.get_pv_lvl())
 print("Pv actuel: ", test.get_pv_tot())"""
 
-test.Menu()
+jet_test = d(10)
+print(jet_test)
+print(type(jet_test))
+
+#test.Menu()
