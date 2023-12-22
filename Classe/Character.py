@@ -32,7 +32,8 @@ class Character:
                     "unconscious": False, 
                     "invisible": False, 
                     "paralyzed": False, 
-                    "petrified": False}
+                    "petrified": False,
+                    "lutte": False}
         self.charm_list = [self.name]
         self.fright_list = [self.name]
         self.disease = []
@@ -51,6 +52,7 @@ class Character:
         self.peau = peau
         self.cheveux = cheveux
         self.size = taille
+        self.size_id = None #à finir plus tard
         self.poids = poids
         self.language = None
 
@@ -80,19 +82,17 @@ class Character:
         self.equiped_backpack = None
 
         # Stats
-        self.DV = 0
+        self.DV = 10
         self.DV_nbr = 0
         self.lvl_up = []
         self.PV_base = self.get_DV()+self.mod_Con
             # Verif rule
-        PV_roll()
-        self.finesse_dex = finesse_rule()
-        self.regen_pv = Regen_rule()
+        #PV_roll()
+        #self.finesse_dex = finesse_rule()
+        #self.regen_pv = Regen_rule()
         self.PV_lvl = 0
         for lvls in range(self.lvl-1):# gain HP par lvl + save []
-            PV_rule(10)
-            print("pvrule : ", type(PV_rule(10)))
-            self.PV_lvl += PV_rule(10) + self.mod_Con
+            self.PV_lvl += PV_rule(self.DV) + self.mod_Con
             self.get_lvl_up().append(self.PV_lvl)
         self.PV_tot = self.PV_base + self.PV_lvl
         self.check_pv_tot = False
@@ -816,64 +816,51 @@ class Character:
                     Player_party = listing().Player_party
                     target = input(f"Qui que vous ciblez\n Les personnages actuel en combat sont: {Player_party}\n")
                     weapon = input(f"Avec qu'elle arme voulez vous tapez ?\n Bras Gauche: {self.left_arm}\n Bras droit: {self.right_arm}")
-                    modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?")
+                    modifier = int(input("Y a t'il un désavantage (-1) ou un Avantage (1) qui s'applique sur ce jet d'attaque non(0)?"))
                     match modifier:
                         case "D":
                             modifier = -1
-                            return modifier
                         case "A":
                             modifier = 1
-                            return modifier
                         case _:
                             modifier = 0
-                            return modifier
                     return self.attack_action(target, weapon, modifier)
                 case "2": # Help
+                    Player_party = listing().Player_party
                     target = input(f"Qui que vous ciblez\n Les personnages actuel en combat sont: {Player_party}\n")
                     return self.help_action(target)
                 case "3": # Search
-                    modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
+                    modifier = int(input("Y a t'il un désavantage (-1) ou un Avantage (1) qui s'applique sur ce jet d'attaque et non(0)?\n"))
                     comp = input(f"Qu'elles compétences voulez vous utilisez pour ce jet de recherche ?\n Liste des compétences lié à l'intelligence ou à la Sagesse: {comp_int, comp_sag}\n")
                     match comp:
                         case "Arcane":
                             comp = self.Arcanes
-                            return comp
                         case "Histoire":
                             comp = self.Histoire
-                            return comp
                         case "Investigation":
                             comp = self.Investigation
-                            return comp
                         case "Nature":
                             comp = self.Nature
-                            return comp
                         case "Religion":
                             comp = self.Religion
-                            return comp
                         case "Dressage":
                             comp = self.Dressage
-                            return comp
                         case "Intuition":
                             comp = self.Intuition
-                            return comp
                         case "Medecine":
                             comp = self.Medecine
-                            return comp
                         case "Perception":
                             comp =  self.Perception
-                            return comp
                         case "Perspicacité":
                             comp = self.Perspicacite
-                            return comp
                         case "Survie":
                             comp = self.Survie
-                            return comp
                     return self.search_action(modifier, comp)
                 case "4": # Esquive
                     print("Vous êtes prêt à esquiver !!\n")
                     return self.dodge_action()
                 case "5": # Hide
-                    modifier = input("Y a t'il un désavantage (D) ou un Avantage (A) qui s'applique sur ce jet d'attaque ?\n")
+                    modifier = int(input("Y a t'il un désavantage (-1) ou un Avantage (1) qui s'applique sur ce jet d'attaque ou non(0)?\n"))
                     return self.hide_action(modifier)
                 case "6": # Ready
                     print("Vous vous tenez prêt à faire un truc pendant votre Réaction\n")
@@ -893,7 +880,6 @@ class Character:
                     match comp:
                         case "Acrobaties":
                             comp = self.Acrobaties
-                            return comp
                         case other:
                             print("va te faire foutre recommence\n")
                             return self.Menu()
@@ -1062,10 +1048,10 @@ class Character:
                 x = random.randint(1, 2)
                 match x:
                     case 1:
-                        jet = d20(modifier) + self.Perception
+                        jet = d20(modifier)[0] + self.Perception
                         print(jet)
                     case 2:
-                        jet = d20(modifier) + self.Investigation
+                        jet = d20(modifier)[0] + self.Investigation
                         print(jet)
             self.Player_Action -= 1
 
@@ -1078,7 +1064,7 @@ class Character:
 
     def hide_action(self, modifier=""):
         if self.Player_Action > 0:
-            jet = d20(modifier) + self.Discretion
+            jet = d20(modifier)[0] + self.Discretion
             print(jet)
             self.Player_Action -= 1
 
@@ -1158,6 +1144,7 @@ class Character:
             if target not in Player_party:
                 x+=1
                 print("je veux un vrai joueur")
+            
 
         global taille_list
         modifier += self.Help  # aide

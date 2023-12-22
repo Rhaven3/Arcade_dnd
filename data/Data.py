@@ -417,8 +417,7 @@ def PV_roll():
 def PV_rule(d1, modifier=0, lvl=1):
     match PV_Roll:
         case True:
-            print(d(d1, modifier,  lvl)[0])
-            return d(d1, modifier,  lvl)[0]
+            return d(d1, modifier,  lvl)
         case False:
             match d1:
                 case 6:
@@ -461,3 +460,15 @@ def Regen_rule():
                 return Regen_PV
             case other:
                 x += 1
+
+#Taille indice (m)
+"""
+def size_id(taille):
+    if taille<=0.75:
+        return "TP"
+    elif taille<=1.50:
+        return "P"
+    elif taille<3.00:
+        return "M"
+    elif taille<=
+"""
