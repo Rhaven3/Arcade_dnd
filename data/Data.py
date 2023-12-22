@@ -417,8 +417,8 @@ def PV_roll():
 def PV_rule(d1, modifier=0, lvl=1):
     match PV_Roll:
         case True:
-            print(d(d1, modifier,  lvl))
-            return d(d1, modifier,  lvl)
+            print(d(d1, modifier,  lvl)[0])
+            return d(d1, modifier,  lvl)[0]
         case False:
             match d1:
                 case 6:
