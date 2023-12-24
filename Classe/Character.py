@@ -880,6 +880,42 @@ class Character:
                     match comp:
                         case "Acrobaties":
                             comp = self.Acrobaties
+                        case "Arcane":
+                            comp = self.Arcanes
+                        case "Athletisme":
+                            comp = self.Athletisme
+                        case "Discretion":
+                            comp = self.Discretion
+                        case "Dressage":
+                            comp = self.Dressage
+                        case "Escamotage":
+                            comp = self.Escamotage
+                        case "Histoire":
+                            comp = self.Histoire
+                        case "Intimidation":
+                            comp = self.Intimidation
+                        case "Intuition":
+                            comp = self.Intuition
+                        case "Investigation":
+                            comp = self.Investigation
+                        case "Medecine":
+                            comp = self.Medecine
+                        case "Nature":
+                            comp = self.Nature
+                        case "Perception":
+                            comp = self.Perception
+                        case "Perspicacite":
+                            comp = self.Perspicacite
+                        case "Persuasion":
+                            comp = self.Persuasion
+                        case "Religion":
+                            comp = self.Religion
+                        case "Representation":
+                            comp = self.Representation
+                        case "Survie":
+                            comp = self.Survie
+                        case "Tromperie":
+                            comp = self.Tromperie
                         case other:
                             print("va te faire foutre recommence\n")
                             return self.Menu()
@@ -887,22 +923,22 @@ class Character:
                     match stat:
                         case "For":
                             self.Player_Action -= 1
-                            return self.jet_For(modifier)
+                            return self.jet_For(modifier, comp)
                         case "Dex":
                             self.Player_Action -= 1
-                            return self.jet_Dex(modifier)
+                            return self.jet_Dex(modifier, comp)
                         case "Con":
                             self.Player_Action -= 1
-                            return self.jet_Con(modifier)
+                            return self.jet_Con(modifier, comp)
                         case "Int":
                             self.Player_Action -= 1
-                            return self.jet_Int(modifier)
+                            return self.jet_Int(modifier, comp)
                         case "Wis":
                             self.Player_Action -= 1
-                            return self.jet_Wis(modifier)
+                            return self.jet_Wis(modifier, comp)
                         case "Cha":
                             self.Player_Action -= 1
-                            return self.jet_Cha(modifier)
+                            return self.jet_Cha(modifier, comp)
                         case other:
                             print("va te faire foutre recommence\n")
                             return self.Menu()
